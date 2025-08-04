@@ -388,6 +388,10 @@ static const struct of_device_id iris_dt_match[] = {
 		.compatible = "qcom,x1p42100-iris",
 		.data = &x1p42100_data,
 	},
+	{
+		.compatible = "qcom,kaanapali-iris",
+		.data = &kaanapali_data,
+	},
 	{ },
 };
 MODULE_DEVICE_TABLE(of, iris_dt_match);
