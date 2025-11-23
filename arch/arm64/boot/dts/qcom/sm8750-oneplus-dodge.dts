@@ -69,7 +69,7 @@
 		#size-cells = <2>;
 		ranges;
 	};
-	
+
 	pmic-glink {
 		compatible = "qcom,sm8750-pmic-glink",
 			     "qcom,sm8550-pmic-glink",
@@ -230,7 +230,7 @@
 		};
 
 	};
-	
+
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
 
@@ -258,7 +258,7 @@
 		vdddig-supply = <&vreg_s1d_0p97>;
 		vddrfa1p2-supply = <&vreg_s7i_1p2>;
 		vddrfa1p8-supply = <&vreg_s3g_1p8>;
-			
+
 		status = "disabled";
 
 		clocks = <&rpmhcc RPMH_RF_CLK1>;
@@ -1134,6 +1134,12 @@
 	status = "okay";
 };
 
+&ipa {
+	firmware-name = "qcom/sm8750/oneplus/dodge/ipa_fws.mbn";
+
+	status = "okay";
+};
+
 &i2c_hub_4 {
 	status = "okay";
 	clock-frequency = <400000>;
@@ -1248,7 +1254,7 @@
 		bias-pull-down;
 		drive-strength = <2>;
 	};
-	
+
 	hall_interrupt_input: hall-interrupt-input-state {
 		pins = "gpio97";
 		function = "gpio";
@@ -1298,7 +1304,7 @@
 		drive-strength = <8>;
 		bias-pull-down;
 	};
-	
+
 	wcd_default: wcd-reset-n-active-state {
 		pins = "gpio101";
 		function = "gpio";
