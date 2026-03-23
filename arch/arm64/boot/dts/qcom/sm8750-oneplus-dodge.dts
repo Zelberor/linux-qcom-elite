@@ -69,55 +69,6 @@
 		#size-cells = <2>;
 		ranges;
 	};
-	
-	pmic-glink {
-		compatible = "qcom,sm8750-pmic-glink",
-			     "qcom,sm8550-pmic-glink",
-			     "qcom,pmic-glink";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		orientation-gpios = <&tlmm 61 GPIO_ACTIVE_HIGH>;
-
-		connector@0 {
-			compatible = "usb-c-connector";
-			reg = <0>;
-
-			power-role = "dual";
-			data-role = "dual";
-
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-
-				port@0 {
-					reg = <0>;
-					pmic_glink_hs_in: endpoint {
-						remote-endpoint = <&usb_1_dwc3_hs>;
-					};
-				};
-
-				port@1 {
-					reg = <1>;
-					pmic_glink_ss_in: endpoint {
-						remote-endpoint = <&usb_dp_qmpphy_out>;
-					};
-				};
-
-				port@2 {
-					reg = <2>;
-
-					pmic_glink_sbu: endpoint {
-						remote-endpoint = <&wcd_usbss_sbu_mux>;
-					};
-				};
-			};
-		};
-	};
-
-	bat: battery {
-		compatible = "simple-battery";
-		voltage-min-design-microvolt = <6300000>;
-	};
 
 	clocks {
 		xo_board: xo-board {
@@ -174,7 +125,7 @@
 
 		clocks = <&q6prmcc LPASS_CLK_ID_SEC_MI2S_IBIT LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
 
-		model = "astonsnd";
+		model = "SM8750-OP13";
 		audio-routing = "IN1_HPHL", "HPHL_OUT",
 				"IN2_HPHR", "HPHR_OUT",
 				"AMIC1", "MIC BIAS1",
@@ -229,6 +180,50 @@
 			};
 		};
 
+	};
+	
+	pmic-glink {
+		compatible = "qcom,sm8750-pmic-glink",
+			     "qcom,sm8550-pmic-glink",
+			     "qcom,pmic-glink";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		orientation-gpios = <&tlmm 61 GPIO_ACTIVE_HIGH>;
+
+		connector@0 {
+			compatible = "usb-c-connector";
+			reg = <0>;
+
+			power-role = "dual";
+			data-role = "dual";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					pmic_glink_hs_in: endpoint {
+						remote-endpoint = <&usb_dwc3_hs>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					pmic_glink_ss_in: endpoint {
+						remote-endpoint = <&usb_dp_qmpphy_out>;
+					};
+				};
+
+				port@2 {
+					reg = <2>;
+
+					pmic_glink_sbu: endpoint {
+						remote-endpoint = <&wcd_usbss_sbu_mux>;
+					};
+				};
+			};
+		};
 	};
 	
 	vph_pwr: vph-pwr-regulator {
@@ -304,6 +299,11 @@
 				regulator-name = "vreg_pmu_pcie_1p8";
 			};
 		};
+	};
+
+	bat: battery {
+		compatible = "simple-battery";
+		voltage-min-design-microvolt = <6300000>;
 	};
 };
 
@@ -432,6 +432,7 @@
 		};
 
 		vreg_l11b_1p0: ldo11 {
+			// Different (higher) in mtp design
 			regulator-name = "vreg_l11b_1p0";
 			regulator-min-microvolt = <1000000>;
 			regulator-max-microvolt = <1100000>;
@@ -443,7 +444,7 @@
 
 		vreg_l12b_1p8: ldo12 {
 			regulator-name = "vreg_l12b_1p8";
-			regulator-min-microvolt = <1800000>;
+			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1800000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 			regulator-allow-set-load;
@@ -917,42 +918,6 @@
 	};
 };
 
-&i2c3 {
-	status = "okay";
-
-	wcd_usbss: typec-mux@e {
-		compatible = "qcom,wcd9395-usbss", "qcom,wcd9390-usbss";
-		reg = <0xe>;
-
-		vdd-supply = <&vreg_l15b_1p8>;
-		reset-gpios = <&tlmm 152 GPIO_ACTIVE_HIGH>;
-
-		mode-switch;
-		orientation-switch;
-
-		ports {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			port@0 {
-				reg = <0>;
-
-				wcd_usbss_sbu_mux: endpoint {
-					remote-endpoint = <&pmic_glink_sbu>;
-				};
-			};
-
-			port@1 {
-				reg = <1>;
-
-				wcd_usbss_headset_out: endpoint {
-					remote-endpoint = <&wcd_codec_headset_in>;
-				};
-			};
-		};
-	};
-};
-
 &lpass_vamacro {
 	vdd-micb-supply = <&vreg_l1b_1p8>;
 	qcom,dmic-sample-rate = <4800000>;
@@ -1033,84 +998,12 @@
 	vdd3-supply = <&vreg_l5b_3p1>;
 };
 
-&qup_i2c3_data_clk {
-	/* Use internal I2C pull-up */
-	bias-pull-up = <2200>;
-};
-
 &qupv3_1 {
 	status = "okay";
 };
 
 &qupv3_2 {
 	status = "okay";
-};
-
-&i2c_master_hub_0 {
-	status = "okay";
-};
-
-&i2c_hub_9 {
-	status = "okay";
-	magnachip: magnachip@10 {
-		compatible = "oplus,dhall-ak09970";
-		reg = <0x10>;
-		vcc-supply = <&vreg_l1b_1p8>;
-		interrupt-parent = <&tlmm>;
-		interrupts = <17 2>;
-		threeaxis_hall_support;
-		dhall,irq-gpio = <&tlmm 17 0x2008>;
-		pinctrl-names = "hall_interrupt_input";
-		pinctrl-0 = <&hall_interrupt_input>;
-	};
-};
-
-&spi4 {
-	status = "okay";
-	synaptics_tcm_hbp@0 {
-		compatible = "synaptics,tcm-spi-hbp";
-		reg = <0>;
-		chip-name = "S3910";
-		spi-max-frequency = <19000000>;
-		interrupt-parent = <&tlmm>;
-		interrupts = <162 0x2008>;
-		vdd-supply = <&vreg_l4b_1p8>;
-		synaptics,irq-gpio   = <&tlmm 162 0x2008>;
-		synaptics,reset-gpio = <&tlmm 161 GPIO_ACTIVE_LOW>;
-		synaptics,avdd-gpio  = <&pm8550vs_j_gpios 3 GPIO_ACTIVE_LOW>;
-		pinctrl-names = "ts_spi_active", "ts_spi_suspend";
-		pinctrl-0 = <&ts_int_active &ts_reset_active>;
-		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
-		panel_type = <10 3 3 3>;
-		firmware_name = "AA545";
-		touchpanel,panel-coords = <20224 44480>;
-		touchpanel,tx-rx-num = <17 38>;
-		touchpanel,tp_ic_type = <2>;
-
-		S3910_PANEL7 {
-			touchpanel,tx-rx-num = <18 40>;
-		};
-	};
-};
-
-
-&gpi_dma1 {
-	status = "okay";
-};
-
-&gpi_dma2 {
-	status = "okay";
-};
-
-&pmk8550_rtc {
-	nvmem-cells = <&rtc_offset>;
-	nvmem-cell-names = "offset";
-};
-
-&pmk8550_sdam_2 {
-	rtc_offset: rtc-offset@bc {
-		reg = <0xbc 0x4>;
-	};
 };
 
 &remoteproc_adsp {
@@ -1139,56 +1032,6 @@
 	memory-region = <&ipa_fw_mem>;
 	firmware-name = "qcom/sm8750/ipa_fws.mbn";
 	status = "okay";
-};
-
-&ipa {
-	qcom,gsi-loader = "self";
-	memory-region = <&ipa_fw_mem>;
-	firmware-name = "qcom/sm8750/ipa_fws.mbn";
-	status = "okay";
-};
-
-&i2c_hub_4 {
-	status = "okay";
-	clock-frequency = <400000>;
-
-	top_speaker: aw882xx_smartpa@34 {
-		compatible = "awinic,aw882xx_smartpa";
-		reg = <0x34>;
-		reset-gpio = <&tlmm 2 GPIO_ACTIVE_HIGH>;
-		sync-load = <1>;
-		sound-channel = <0>;
-		aw-re-min = <5300>;
-		aw-re-max = <7500>;
-		aw-re-default = <5800>;
-		aw-f0-min = <100>;
-		aw-f0-max = <2000>;
-		aw-f0-default = <758>;
-		monitor-mode = "hal_monitor";
-		f0-enable = <1>;
-		status = "okay";
-
-		#sound-dai-cells = <0>;
-	};
-
-	bottom_speaker: aw882xx_smartpa@35 {
-		compatible = "awinic,aw882xx_smartpa";
-		reg = <0x35>;
-		reset-gpio = <&tlmm 164 GPIO_ACTIVE_HIGH>;
-		sync-load = <1>;
-		sound-channel = <1>;
-		aw-re-min = <5300>;
-		aw-re-max = <7500>;
-		aw-re-default = <6100>;
-		aw-f0-min = <100>;
-		aw-f0-max = <2000>;
-		aw-f0-default = <714>;
-		monitor-mode = "hal_monitor";
-		f0-enable = <1>;
-		status = "okay";
-
-		#sound-dai-cells = <0>;
-	};
 };
 
 &swr1 {
@@ -1322,29 +1165,6 @@
 	};
 };
 
-&uart14 {
-	status = "disabled";
-
-	bluetooth {
-		compatible = "qcom,wcn7880-bt";
-
-		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
-		vddaon-supply = <&vreg_pmu_aon_0p59>;
-		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
-		vddwlmx-supply = <&vreg_pmu_wlmx_0p85>;
-		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
-		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
-		vddrfa1p8-supply = <&vreg_pmu_rfa_1p8>;
-
-		max-speed = <3200000>;
-		status = "disabled";
-	};
-};
-
-&uart7 {
-	status = "okay";
-};
-
 /* Pinctrl */
 &lpass_tlmm {
 	i2s1_default: i2s1-default-state {
@@ -1382,6 +1202,29 @@
 	};
 };
 
+&uart7 {
+	status = "okay";
+};
+
+&uart14 {
+	status = "disabled";
+
+	bluetooth {
+		compatible = "qcom,wcn7880-bt";
+
+		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
+		vddaon-supply = <&vreg_pmu_aon_0p59>;
+		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
+		vddwlmx-supply = <&vreg_pmu_wlmx_0p85>;
+		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
+		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
+		vddrfa1p8-supply = <&vreg_pmu_rfa_1p8>;
+
+		max-speed = <3200000>;
+		status = "disabled";
+	};
+};
+
 &ufs_mem_phy {
 	vdda-phy-supply = <&vreg_l1j_0p91>;
 	vdda-pll-supply = <&vreg_l3g_1p2>;
@@ -1400,29 +1243,7 @@
 	status = "okay";
 };
 
-&pm8010_n {
-  status = "disabled";
-};
-
-&usb_1 {
-	status = "okay";
-};
-
-&usb_1_dwc3 {
-	dr_mode = "otg";
-	usb-role-switch;
-};
-
-&usb_1_dwc3_hs {
-	remote-endpoint = <&pmic_glink_hs_in>;
-};
-
-&usb_1_hsphy {
-	vdd-supply = <&vreg_l2d_0p88>;
-	vdda12-supply = <&vreg_l3g_1p2>;
-
-	phys = <&pmih0108_eusb2_repeater>;
-
+&usb {
 	status = "okay";
 };
 
@@ -1436,6 +1257,26 @@
 &usb_dp_qmpphy_out {
 	remote-endpoint = <&pmic_glink_ss_in>;
 };
+
+&usb_dwc3_hs {
+	remote-endpoint = <&pmic_glink_hs_in>;
+};
+
+&usb_hsphy {
+	vdd-supply = <&vreg_l2d_0p88>;
+	vdda12-supply = <&vreg_l3g_1p2>;
+
+	phys = <&pmih0108_eusb2_repeater>;
+
+	status = "okay";
+};
+
+// Additional stuff not present in mtp/qrd
+
+// &usb_1_dwc3 {
+// 	dr_mode = "otg"; // Might add to &usb?
+// 	usb-role-switch;
+// };
 
 &mdss {
 	status = "okay";
@@ -1488,11 +1329,167 @@
 	status = "okay";
 };
 
+// Touch
+&spi4 {
+	status = "okay";
+	synaptics_tcm_hbp@0 {
+		compatible = "synaptics,tcm-spi-hbp";
+		reg = <0>;
+		chip-name = "S3910";
+		spi-max-frequency = <19000000>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <162 0x2008>;
+		vdd-supply = <&vreg_l4b_1p8>;
+		synaptics,irq-gpio = <&tlmm 162 0x2008>;
+		synaptics,reset-gpio = <&tlmm 161 GPIO_ACTIVE_LOW>;
+		synaptics,avdd-gpio = <&pm8550vs_j_gpios 3 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "ts_spi_active", "ts_spi_suspend";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
+		panel_type = <10 3 3 3>;
+		firmware_name = "AA545";
+		touchpanel,panel-coords = <20224 44480>;
+		touchpanel,tx-rx-num = <17 38>;
+		touchpanel,tp_ic_type = <2>;
+
+		S3910_PANEL7 {
+			touchpanel,tx-rx-num = <18 40>;
+		};
+	};
+};
+
 &i2c_hub_3 {
-    status = "okay";
-    bq28z610: fuel-gauge@55 {
-        compatible = "ti,bq27541";
-        reg = <0x55>;
-        monitored-battery = <&bat>;
-    };
+	status = "okay";
+	bq28z610: fuel-gauge@55 {
+		compatible = "ti,bq27541";
+		reg = <0x55>;
+		monitored-battery = <&bat>;
+	};
+};
+
+&i2c3 {
+	status = "okay";
+
+	wcd_usbss: typec-mux@e {
+		compatible = "qcom,wcd9395-usbss", "qcom,wcd9390-usbss";
+		reg = <0xe>;
+
+		vdd-supply = <&vreg_l15b_1p8>;
+		reset-gpios = <&tlmm 152 GPIO_ACTIVE_HIGH>;
+
+		mode-switch;
+		orientation-switch;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				wcd_usbss_sbu_mux: endpoint {
+					remote-endpoint = <&pmic_glink_sbu>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+
+				wcd_usbss_headset_out: endpoint {
+					remote-endpoint = <&wcd_codec_headset_in>;
+				};
+			};
+		};
+	};
+};
+
+&qup_i2c3_data_clk {
+	/* Use internal I2C pull-up */
+	bias-pull-up = <2200>;
+};
+
+&i2c_master_hub_0 {
+	status = "okay";
+};
+
+&i2c_hub_9 {
+	status = "disabled";
+	magnachip: magnachip@10 {
+		compatible = "oplus,dhall-ak09970";
+		reg = <0x10>;
+		vcc-supply = <&vreg_l1b_1p8>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <17 2>;
+		threeaxis_hall_support;
+		dhall,irq-gpio = <&tlmm 17 0x2008>;
+		pinctrl-names = "hall_interrupt_input";
+		pinctrl-0 = <&hall_interrupt_input>;
+	};
+};
+
+
+&gpi_dma1 {
+	status = "okay";
+};
+
+&gpi_dma2 {
+	status = "okay";
+};
+
+&pmk8550_rtc {
+	nvmem-cells = <&rtc_offset>;
+	nvmem-cell-names = "offset";
+};
+
+&pmk8550_sdam_2 {
+	rtc_offset: rtc-offset@bc {
+		reg = <0xbc 0x4>;
+	};
+};
+
+&i2c_hub_4 {
+	status = "disabled";
+	clock-frequency = <400000>;
+
+	top_speaker: aw882xx_smartpa@34 {
+		compatible = "awinic,aw882xx_smartpa";
+		reg = <0x34>;
+		reset-gpio = <&tlmm 2 GPIO_ACTIVE_HIGH>;
+		sync-load = <1>;
+		sound-channel = <0>;
+		aw-re-min = <5300>;
+		aw-re-max = <7500>;
+		aw-re-default = <5800>;
+		aw-f0-min = <100>;
+		aw-f0-max = <2000>;
+		aw-f0-default = <758>;
+		monitor-mode = "hal_monitor";
+		f0-enable = <1>;
+		status = "okay";
+
+		#sound-dai-cells = <0>;
+	};
+
+	bottom_speaker: aw882xx_smartpa@35 {
+		compatible = "awinic,aw882xx_smartpa";
+		reg = <0x35>;
+		reset-gpio = <&tlmm 164 GPIO_ACTIVE_HIGH>;
+		sync-load = <1>;
+		sound-channel = <1>;
+		aw-re-min = <5300>;
+		aw-re-max = <7500>;
+		aw-re-default = <6100>;
+		aw-f0-min = <100>;
+		aw-f0-max = <2000>;
+		aw-f0-default = <714>;
+		monitor-mode = "hal_monitor";
+		f0-enable = <1>;
+		status = "okay";
+
+		#sound-dai-cells = <0>;
+	};
+};
+
+&pm8010_n {
+  status = "disabled";
 };
