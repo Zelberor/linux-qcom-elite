@@ -21,8 +21,33 @@
 
 / {
 	model = "OnePlus 13";
-	compatible = "OnePlus,13", "qcom,sm8750";
+	compatible = "OnePlus,13", "dodge", "qcom,sm8750";
 	chassis-type = "handset";
+
+	oplus,project-id = <23893 23894 23895>;
+	// oplus,hw-id = <OPLUS_T1 OPLUS_EVT1 OPLUS_EVT2 OPLUS_DVT1 OPLUS_DVT2 OPLUS_PVT1>;
+	oplus,hw-id = <17 24 25 32 33 40>;
+	qcom,msm-id = <618 0x10000>, <618 0x20000>, <639 0x10000>, <639 0x20000>,
+		      <0x100026a 0x10000>, <0x100026a 0x20000>,
+		      <0x100027f 0x10000>, <0x100027f 0x20000>;
+	qcom,board-id = <0x40008 0>;
+
+	reserved-memory {
+		splash_memory: splash_region@fc800000 {
+			reg = <0x0 0xfc800000 0x0 0x02b00000>;
+			label = "cont_splash_region";
+			no-map;
+		};
+
+		ramoops: ramoops@a3000000 {
+			compatible = "ramoops";
+			reg = <0 0xa3000000 0 0x240000>;
+			console-size = <0x40000>;
+			mem-type = <2>;
+			pmsg-size = <0x200000>;
+			no-map;
+		};
+	};
 
 	aliases {
 		serial0 = &uart7;
@@ -68,6 +93,15 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
+
+		framebuffer: framebuffer@fc800000 {
+			compatible = "simple-framebuffer";
+			reg = <0x00 0xfc800000 0x00 0x2b00000>;
+			width = <1440>;
+			height = <3168>;
+			stride = <(1440 * 4)>;
+			format = "a8r8g8b8";
+		};
 	};
 
 	clocks {
@@ -918,6 +952,11 @@
 	};
 };
 
+// TODO: Check thermal zones in 
+// android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-pmic-overlay.dtsi
+// android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-thermal.dtsi
+// android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-tp.dtsi
+
 &lpass_vamacro {
 	vdd-micb-supply = <&vreg_l1b_1p8>;
 	qcom,dmic-sample-rate = <4800000>;
@@ -964,14 +1003,14 @@
 	pinctrl-0 = <&pcie0_default_state>;
 	pinctrl-names = "default";
 
-	status = "okay";
+	status = "disabled";
 };
 
 &pcie0_phy {
 	vdda-phy-supply = <&vreg_l1f_0p88>;
 	vdda-pll-supply = <&vreg_l3g_1p2>;
 
-	status = "okay";
+	status = "disabled";
 };
 
 &pcieport0 {
@@ -1121,6 +1160,9 @@
 		};
 	};
 
+	// TODO: Check pin
+	// android_kernel_modules_and_devicetree_oneplus_sm8750/vendor/qcom/opensource/display-devicetree/oplus/dodge-23821-display-sun-overlay.dtsi
+	// says gpio7
 	disp0_reset_n_active: disp0-reset-n-active-state {
 		pins = "gpio98";
 		function = "gpio";
@@ -1245,6 +1287,7 @@
 
 &usb {
 	status = "okay";
+	dr_mode = "otg";
 };
 
 &usb_dp_qmpphy {
@@ -1279,7 +1322,7 @@
 // };
 
 &mdss {
-	status = "okay";
+	status = "disabled";
 };
 
 // Disabled for now until upstream DP merged
@@ -1294,7 +1337,8 @@
 &mdss_dsi0 {
 	vdda-supply = <&vreg_l3g_1p2>;
 
-	status = "okay";
+	// better debugging with simple framebuffer
+	status = "disabled";
 
 	panel@0 {
 		compatible = "oneplus,dodge-panel";
@@ -1326,7 +1370,7 @@
 &mdss_dsi0_phy {
 	vdds-supply = <&vreg_l3i_0p88>;
 
-	status = "okay";
+	status = "disabled";
 };
 
 // Touch
