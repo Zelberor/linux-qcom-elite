@@ -24,9 +24,11 @@
 	compatible = "OnePlus,13", "dodge", "qcom,sm8750";
 	chassis-type = "handset";
 
-	oplus,project-id = <23893 23894 23895>;
+	// From kernel_platform/qcom/opensource/devicetree/oplus/dodge-23821-sun-overlay.dts
+	oplus,project-id = <23821>;
 	// oplus,hw-id = <OPLUS_T1 OPLUS_EVT1 OPLUS_EVT2 OPLUS_DVT1 OPLUS_DVT2 OPLUS_PVT1>;
 	oplus,hw-id = <17 24 25 32 33 40>;
+	// From kernel_platform/qcom/opensource/devicetree/qcom/sun-mtp-v8-overlay.dts
 	qcom,msm-id = <618 0x10000>, <618 0x20000>, <639 0x10000>, <639 0x20000>,
 		      <0x100026a 0x10000>, <0x100026a 0x20000>,
 		      <0x100027f 0x10000>, <0x100027f 0x20000>;
@@ -1322,7 +1324,7 @@
 // };
 
 &mdss {
-	status = "disabled";
+	status = "okay";
 };
 
 // Disabled for now until upstream DP merged
@@ -1337,8 +1339,7 @@
 &mdss_dsi0 {
 	vdda-supply = <&vreg_l3g_1p2>;
 
-	// better debugging with simple framebuffer
-	status = "disabled";
+	status = "okay";
 
 	panel@0 {
 		compatible = "oneplus,dodge-panel";
@@ -1370,7 +1371,7 @@
 &mdss_dsi0_phy {
 	vdds-supply = <&vreg_l3i_0p88>;
 
-	status = "disabled";
+	status = "okay";
 };
 
 // Touch
