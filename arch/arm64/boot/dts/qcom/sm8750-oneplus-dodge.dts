@@ -21,7 +21,7 @@
 
 / {
 	model = "OnePlus 13";
-	compatible = "OnePlus,13", "dodge", "qcom,sm8750";
+	compatible = "oneplus,dodge", "qcom,sm8750";
 	chassis-type = "handset";
 
 	// From kernel_platform/qcom/opensource/devicetree/oplus/dodge-23821-sun-overlay.dts
@@ -47,6 +47,20 @@
 			console-size = <0x40000>;
 			mem-type = <2>;
 			pmsg-size = <0x200000>;
+			no-map;
+		};
+
+		// From kernel_platform/qcom/opensource/devicetree/oplus/sun_overlay_common.dtsi
+		// bootloader_log_mem: botloader_mem@81ce4000 {
+		// 	reg = <0 0x81ce4000 0 0x00010000>;
+		// 	label = "bootloader_log_mem";
+		//	no-map;
+		// };
+
+		// From kernel_platform/qcom/opensource/devicetree/oplus/sun_overlay_common.dtsi
+		dump_device_info_mem: device_info_mem@a4f00000 {
+			reg = <0 0xa4f00000 0 0x00008000>;
+			label = "dump_device_info_mem";
 			no-map;
 		};
 	};
@@ -362,6 +376,7 @@
 
 		qcom,pmic-id = "b";
 
+		// rpmh-regulator-bobb1
 		vreg_bob1: bob1 {
 			regulator-name = "vreg_bob1";
 			regulator-min-microvolt = <3008000>;
@@ -369,6 +384,7 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-bobb2
 		vreg_bob2: bob2 {
 			regulator-name = "vreg_bob2";
 			regulator-min-microvolt = <2704000>;
@@ -376,6 +392,7 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob1
 		vreg_l1b_1p8: ldo1 {
 			regulator-name = "vreg_l1b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -386,6 +403,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob2
 		vreg_l2b_3p0: ldo2 {
 			regulator-name = "vreg_l2b_3p0";
 			regulator-min-microvolt = <3008000>;
@@ -396,6 +414,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob4
 		vreg_l4b_1p8: ldo4 {
 			regulator-name = "vreg_l4b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -406,6 +425,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob5
 		vreg_l5b_3p1: ldo5 {
 			regulator-name = "vreg_l5b_3p1";
 			regulator-min-microvolt = <3100000>;
@@ -416,6 +436,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob6
 		vreg_l6b_1p8: ldo6 {
 			regulator-name = "vreg_l6b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -426,6 +447,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob7
 		vreg_l7b_1p8: ldo7 {
 			regulator-name = "vreg_l7b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -437,6 +459,7 @@
 
 		};
 
+		// rpmh-regulator-ldob8
 		vreg_l8b_1p8: ldo8 {
 			regulator-name = "vreg_l8b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -447,6 +470,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob9
 		vreg_l9b_2p9: ldo9 {
 			regulator-name = "vreg_l9b_2p9";
 			regulator-min-microvolt = <2960000>;
@@ -457,6 +481,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob10
 		vreg_l10b_1p8: ldo10 {
 			regulator-name = "vreg_l10b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -467,20 +492,23 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob11
 		vreg_l11b_1p0: ldo11 {
-			// Different (higher) in mtp design
 			regulator-name = "vreg_l11b_1p0";
-			regulator-min-microvolt = <1000000>;
-			regulator-max-microvolt = <1100000>;
+			regulator-min-microvolt = <1064000>;
+			regulator-max-microvolt = <1292000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob12
 		vreg_l12b_1p8: ldo12 {
 			regulator-name = "vreg_l12b_1p8";
 			regulator-min-microvolt = <1200000>;
+			// Max is 1900000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// Leaving at 1800000 for parity with mtp
 			regulator-max-microvolt = <1800000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 			regulator-allow-set-load;
@@ -488,6 +516,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob13
 		vreg_l13b_3p0: ldo13 {
 			regulator-name = "vreg_l13b_3p0";
 			regulator-min-microvolt = <3000000>;
@@ -498,6 +527,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob14
 		vreg_l14b_3p2: ldo14 {
 			regulator-name = "vreg_l14b_3p2";
 			regulator-min-microvolt = <3200000>;
@@ -508,6 +538,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob15
 		vreg_l15b_1p8: ldo15 {
 			regulator-name = "vreg_l15b_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -519,6 +550,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob16
 		vreg_l16b_2p8: ldo16 {
 			regulator-name = "vreg_l16b_2p8";
 			regulator-min-microvolt = <2800000>;
@@ -529,6 +561,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldob17
 		vreg_l17b_2p5: ldo17 {
 			regulator-name = "vreg_l17b_2p5";
 			regulator-min-microvolt = <2504000>;
@@ -552,6 +585,7 @@
 
 		qcom,pmic-id = "d";
 
+		// rpmh-regulator-smpd1
 		vreg_s1d_0p97: smps1 {
 			regulator-name = "vreg_s1d_0p97";
 			regulator-min-microvolt = <880000>;
@@ -559,6 +593,7 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpd3
 		vreg_s3d_1p2: smps3 {
 			regulator-name = "vreg_s3d_1p2";
 			regulator-min-microvolt = <1200000>;
@@ -566,13 +601,18 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpd4
 		vreg_s4d_0p85: smps4 {
 			regulator-name = "vreg_s4d_0p85";
+			// Min is 500000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// 852000 is init-voltage
+			// Leaving at 852000 for parity with mtp
 			regulator-min-microvolt = <852000>;
 			regulator-max-microvolt = <1036000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldod1
 		vreg_l1d_1p2: ldo1 {
 			regulator-name = "vreg_l1d_1p2";
 			regulator-min-microvolt = <1200000>;
@@ -583,6 +623,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldod2
 		vreg_l2d_0p88: ldo2 {
 			regulator-name = "vreg_l2d_0p88";
 			regulator-min-microvolt = <880000>;
@@ -593,6 +634,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldod3
 		vreg_l3d_0p88: ldo3 {
 			regulator-name = "vreg_l3d_0p88";
 			regulator-min-microvolt = <880000>;
@@ -614,13 +656,19 @@
 
 		qcom,pmic-id = "f";
 
+		// rpmh-regulator-smpf5
 		vreg_s5f_0p85: smps5 {
 			regulator-name = "vreg_s5f_0p85";
+			// Min is 500000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// 852000 is init-voltage
+			// Leaving at 852000 for parity with mtp
+			// This regulator is disabled in sun-regulators.dtsi???
 			regulator-min-microvolt = <852000>;
 			regulator-max-microvolt = <1000000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldof1
 		vreg_l1f_0p88: ldo1 {
 			regulator-name = "vreg_l1f_0p88";
 			regulator-min-microvolt = <880000>;
@@ -631,6 +679,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldof2
 		vreg_l2f_1p2: ldo2 {
 			regulator-name = "vreg_l2f_1p2";
 			regulator-min-microvolt = <1200000>;
@@ -641,6 +690,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldof3
 		vreg_l3f_1p8: ldo3 {
 			regulator-name = "vreg_l3f_1p8";
 			regulator-min-microvolt = <1800000>;
@@ -664,23 +714,28 @@
 
 		qcom,pmic-id = "g";
 
+		// rpmh-regulator-smpg1
 		vreg_s1g_0p5: smps1 {
 			regulator-name = "vreg_s1g_0p5";
 			regulator-min-microvolt = <300000>;
 			regulator-max-microvolt = <700000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpg3
 		vreg_s3g_1p8: smps3 {
 			regulator-name = "vreg_s3g_1p8";
 			regulator-min-microvolt = <1856000>;
 			regulator-max-microvolt = <2000000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpg4
 		vreg_s4g_0p75: smps4 {
 			regulator-name = "vreg_s4g_0p75";
 			regulator-min-microvolt = <300000>;
@@ -688,6 +743,7 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldog1
 		vreg_l1g_0p91: ldo1 {
 			regulator-name = "vreg_l1g_0p91";
 			regulator-min-microvolt = <912000>;
@@ -698,6 +754,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldog2
 		vreg_l2g_1p8: ldo2 {
 			regulator-name = "vreg_l2g_1p8";
 			regulator-min-microvolt = <1200000>;
@@ -708,6 +765,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldog3
 		vreg_l3g_1p2: ldo3 {
 			regulator-name = "vreg_l3g_1p2";
 			regulator-min-microvolt = <1200000>;
@@ -730,22 +788,29 @@
 
 		qcom,pmic-id = "i";
 
+		// rpmh-regulator-smpi7
 		vreg_s7i_1p2: smps7 {
 			regulator-name = "vreg_s7i_1p2";
 			regulator-min-microvolt = <1224000>;
 			regulator-max-microvolt = <1340000>;
+			// RPMH_REGULATOR_MODE_RET specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpi8
 		vreg_s8i_0p9: smps8 {
 			regulator-name = "vreg_s8i_0p9";
 			regulator-min-microvolt = <900000>;
 			regulator-max-microvolt = <972000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldoi1
 		vreg_l1i_1p2: ldo1 {
 			regulator-name = "vreg_l1i_1p2";
+			// Min is 1100000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// Leaving at 1200000 for parity with mtp
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1200000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -754,6 +819,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldoi2
 		vreg_l2i_1p2: ldo2 {
 			regulator-name = "vreg_l2i_1p2";
 			regulator-min-microvolt = <1200000>;
@@ -764,6 +830,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldoi3
 		vreg_l3i_0p88: ldo3 {
 			regulator-name = "vreg_l3i_0p88";
 			regulator-min-microvolt = <880000>;
@@ -786,20 +853,28 @@
 
 		qcom,pmic-id = "j";
 
+		// rpmh-regulator-smpj2
 		vreg_s2j_1p1: smps2 {
 			regulator-name = "vreg_s2j_1p1";
 			regulator-min-microvolt = <1000000>;
 			regulator-max-microvolt = <1100000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpj3
 		vreg_s3j_1p1: smps3 {
 			regulator-name = "vreg_s3j_1p1";
 			regulator-min-microvolt = <1000000>;
 			regulator-max-microvolt = <1100000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-smpj4 missing
+		// Disabled in kernel_platform/qcom/opensource/devicetree/qcom/sun-pmic-overlay-v8.dtsi
+
+		// rpmh-regulator-ldoj1
 		vreg_l1j_0p91: ldo1 {
 			regulator-name = "vreg_l1j_0p91";
 			regulator-min-microvolt = <880000>;
@@ -810,6 +885,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldoj2
 		vreg_l2j_1p2: ldo2 {
 			regulator-name = "vreg_l2j_1p2";
 			regulator-min-microvolt = <1200000>;
@@ -821,6 +897,8 @@
 		};
 	};
 
+	// k section in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi missing completely???
+
 	regulators-6 {
 		compatible = "qcom,pm8010-rpmh-regulators";
 		qcom,pmic-id = "m";
@@ -831,6 +909,7 @@
 		vdd-l6-supply = <&vreg_bob1>;
 		vdd-l7-supply = <&vreg_bob1>;
 
+		// rpmh-regulator-ldom1
 		vreg_l1m_1p1: ldo1 {
 			regulator-name = "vreg_l1m_1p1";
 			regulator-min-microvolt = <1104000>;
@@ -841,6 +920,7 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldom2
 		vreg_l2m_1p056: ldo2 {
 			regulator-name = "vreg_l2m_1p056";
 			regulator-min-microvolt = <1056000>;
@@ -851,38 +931,54 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldom3
 		vreg_l3m_2p8: ldo3 {
 			regulator-name = "vreg_l3m_2p8";
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldom4
 		vreg_l4m_2p8: ldo4 {
 			regulator-name = "vreg_l4m_2p8";
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldom5
 		vreg_l5m_1p8: ldo5 {
 			regulator-name = "vreg_l5m_1p8";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldom6
 		vreg_l6m_2p8: ldo6 {
 			regulator-name = "vreg_l6m_2p8";
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
+			// !!Only set to 1800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
+			// But 2800000 in mtp -> changed to 1800000
+			regulator-min-microvolt = <1800000>;
+			// !!Only set to 1800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
+			// But 2800000 in mtp -> changed to 1800000
+			regulator-max-microvolt = <1800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldom7
 		vreg_l7m_2p96: ldo7 {
 			regulator-name = "vreg_l7m_2p96";
+			// Min is 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// Leaving at 2960000 for parity with mtp
 			regulator-min-microvolt = <2960000>;
 			regulator-max-microvolt = <2960000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
@@ -897,8 +993,11 @@
 		vdd-l6-supply = <&vreg_bob2>;
 		vdd-l7-supply = <&vreg_bob1>;
 
+		// rpmh-regulator-ldon1
 		vreg_l1n_1p1: ldo1 {
 			regulator-name = "vreg_l1n_1p1";
+			// Min is 800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// Leaving at 1104000 for parity with mtp
 			regulator-min-microvolt = <1104000>;
 			regulator-max-microvolt = <1104000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -907,8 +1006,11 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldon2
 		vreg_l2n_1p1: ldo2 {
 			regulator-name = "vreg_l2n_1p1";
+			// Min is 800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// Leaving at 1104000 for parity with mtp
 			regulator-min-microvolt = <1104000>;
 			regulator-max-microvolt = <1104000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -917,38 +1019,58 @@
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldon3
 		vreg_l3n_1p8: ldo3 {
 			regulator-name = "vreg_l3n_1p8";
+			// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
 			regulator-min-microvolt = <1800000>;
+			// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
 			regulator-max-microvolt = <1800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldon4
 		vreg_l4n_1p8: ldo4 {
 			regulator-name = "vreg_l4n_1p8";
+			// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
 			regulator-min-microvolt = <1800000>;
+			// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
 			regulator-max-microvolt = <1800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldon5
 		vreg_l5n_2p8: ldo5 {
 			regulator-name = "vreg_l5n_2p8";
 			regulator-min-microvolt = <2800000>;
+			// Max is 3304000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			// Leaving at 2800000 for parity with mtp
 			regulator-max-microvolt = <2800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldon6
 		vreg_l6n_2p8: ldo6 {
 			regulator-name = "vreg_l6n_2p8";
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
+			// !!Only set to 1800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
+			// But 2800000 in mtp -> changed to 1800000
+			regulator-min-microvolt = <1800000>;
+			// !!Only set to 1800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
+			// But 2800000 in mtp -> changed to 1800000
+			regulator-max-microvolt = <1800000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		// rpmh-regulator-ldon7
 		vreg_l7n_3p3: ldo7 {
 			regulator-name = "vreg_l7n_3p3";
 			regulator-min-microvolt = <3304000>;
 			regulator-max-microvolt = <3304000>;
+			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
@@ -1317,11 +1439,6 @@
 };
 
 // Additional stuff not present in mtp/qrd
-
-// &usb_1_dwc3 {
-// 	dr_mode = "otg"; // Might add to &usb?
-// 	usb-role-switch;
-// };
 
 &mdss {
 	status = "okay";
