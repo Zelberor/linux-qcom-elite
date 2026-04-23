@@ -170,11 +170,6 @@
 
 	sound {
 		compatible = "qcom,sm8750-sndcard", "qcom,sm8450-sndcard";
-		pinctrl-0 = <&i2s1_default>;
-		pinctrl-names = "default";
-
-		clocks = <&q6prmcc LPASS_CLK_ID_SEC_MI2S_IBIT LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
-
 		model = "SM8750-OP13";
 		audio-routing = "IN1_HPHL", "HPHL_OUT",
 				"IN2_HPHR", "HPHR_OUT",
@@ -188,14 +183,22 @@
 				"TX SWR_INPUT0", "ADC3_OUTPUT",
 				"TX SWR_INPUT1", "ADC4_OUTPUT";
 
+		pinctrl-0 = <&i2s1_default>;
+		pinctrl-names = "default";
+
+		clocks = <&q6prmcc LPASS_CLK_ID_SEC_MI2S_IBIT LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
+
 		wcd-playback-dai-link {
 			link-name = "WCD Playback";
-			cpu {
-				sound-dai = <&q6apmbedai RX_CODEC_DMA_RX_0>;
-			};
+
 			codec {
 				sound-dai = <&wcd939x 0>, <&swr1 0>, <&lpass_rxmacro 0>;
 			};
+
+			cpu {
+				sound-dai = <&q6apmbedai RX_CODEC_DMA_RX_0>;
+			};
+
 			platform {
 				sound-dai = <&q6apm>;
 			};
@@ -203,12 +206,15 @@
 
 		wcd-capture-dai-link {
 			link-name = "WCD Capture";
-			cpu {
-				sound-dai = <&q6apmbedai TX_CODEC_DMA_TX_3>;
-			};
+
 			codec {
 				sound-dai = <&wcd939x 1>, <&swr2 0>, <&lpass_txmacro 0>;
 			};
+
+			cpu {
+				sound-dai = <&q6apmbedai TX_CODEC_DMA_TX_3>;
+			};
+
 			platform {
 				sound-dai = <&q6apm>;
 			};
@@ -217,6 +223,10 @@
 		secondary-i2s-dai-link {
 			link-name = "Secondary MI2S Playback";
 
+			codec {
+				sound-dai = <&top_speaker>, <&bottom_speaker>;
+			};
+
 			cpu {
 				sound-dai = <&q6apmbedai SECONDARY_MI2S_RX>;
 			};
@@ -224,12 +234,7 @@
 			platform {
 				sound-dai = <&q6apm>;
 			};
-
-			codec {
-				sound-dai = <&top_speaker>, <&bottom_speaker>;
-			};
 		};
-
 	};
 	
 	pmic-glink {
@@ -253,6 +258,7 @@
 
 				port@0 {
 					reg = <0>;
+
 					pmic_glink_hs_in: endpoint {
 						remote-endpoint = <&usb_dwc3_hs>;
 					};
@@ -260,6 +266,7 @@
 
 				port@1 {
 					reg = <1>;
+
 					pmic_glink_ss_in: endpoint {
 						remote-endpoint = <&usb_dp_qmpphy_out>;
 					};
@@ -456,7 +463,6 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
-
 		};
 
 		// rpmh-regulator-ldob8
@@ -700,7 +706,6 @@
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
 		};
-
 	};
 
 	regulators-3 {
@@ -1086,13 +1091,107 @@
 // android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-thermal.dtsi
 // android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-tp.dtsi
 
+&i2c3 {
+	status = "okay";
+
+	wcd_usbss: typec-mux@e {
+		compatible = "qcom,wcd9395-usbss", "qcom,wcd9390-usbss";
+		reg = <0xe>;
+
+		vdd-supply = <&vreg_l15b_1p8>;
+		reset-gpios = <&tlmm 152 GPIO_ACTIVE_HIGH>;
+
+		mode-switch;
+		orientation-switch;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				wcd_usbss_sbu_mux: endpoint {
+					remote-endpoint = <&pmic_glink_sbu>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+
+				wcd_usbss_headset_out: endpoint {
+					remote-endpoint = <&wcd_codec_headset_in>;
+				};
+			};
+		};
+	};
+};
+
+&iris {
+	status = "okay";
+};
+
 &lpass_vamacro {
+	// Pinctl missing? -> mtp?
+
 	vdd-micb-supply = <&vreg_l1b_1p8>;
 	qcom,dmic-sample-rate = <4800000>;
 };
 
+&mdss {
+	status = "okay";
+};
+
+// Disabled for now until DP enabled
+&mdss_dp0 {
+	status = "disabled";
+};
+
+&mdss_dp0_out {
+	link-frequencies = /bits/ 64 <1620000000 2700000000 5400000000 8100000000>;
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l3g_1p2>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "oneplus,dodge-panel";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 98 GPIO_ACTIVE_LOW>;
+
+		vddio-supply = <&vreg_l12b_1p8>;
+		vci-supply = <&vreg_l13b_3p0>;
+		vdd-supply = <&vreg_l11b_1p0>;
+
+		pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync>;
+		pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync>;
+		pinctrl-names = "default", "sleep";
+
+		port {
+			panel0_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	remote-endpoint = <&panel0_in>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss_dsi0_phy {
+	vdds-supply = <&vreg_l3i_0p88>;
+
+	status = "okay";
+};
+
 &pm8550_flash {
 	status = "okay";
+
 	led-0 {
 		function = LED_FUNCTION_FLASH;
 		color = <LED_COLOR_ID_WHITE>;
@@ -1125,8 +1224,8 @@
 };
 
 &pcie0 {
-	wake-gpios = <&tlmm 104 GPIO_ACTIVE_HIGH>;
-	perst-gpios = <&tlmm 102 GPIO_ACTIVE_LOW>;
+	// wake-gpios = <&tlmm 104 GPIO_ACTIVE_HIGH>;
+	// perst-gpios = <&tlmm 102 GPIO_ACTIVE_LOW>;
 
 	pinctrl-0 = <&pcie0_default_state>;
 	pinctrl-names = "default";
@@ -1142,6 +1241,9 @@
 };
 
 &pcieport0 {
+	wake-gpios = <&tlmm 104 GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&tlmm 102 GPIO_ACTIVE_LOW>;
+
 	wifi@0 {
 		compatible = "pci17cb,1107";
 		reg = <0x10000 0x0 0x0 0x0 0x0>;
@@ -1159,10 +1261,19 @@
 };
 
 &pmih0108_eusb2_repeater {
-	status = "okay";
+	qcom,tune-usb2-preem = /bits/ 8 <0x3>;
+	qcom,tune-usb2-amplitude = /bits/ 8 <0xa>;
+	qcom,squelch-detector-bp = <(-2000)>;
 
 	vdd18-supply = <&vreg_l15b_1p8>;
 	vdd3-supply = <&vreg_l5b_3p1>;
+
+	status = "okay";
+};
+
+&qup_i2c3_data_clk {
+	/* Use internal I2C pull-up */
+	bias-pull-up = <2200>;
 };
 
 &qupv3_1 {
@@ -1288,6 +1399,13 @@
 		};
 	};
 
+	mdp_vsync: mdp-vsync-state {
+		pins = "gpio86";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
 	// TODO: Check pin
 	// android_kernel_modules_and_devicetree_oneplus_sm8750/vendor/qcom/opensource/display-devicetree/oplus/dodge-23821-display-sun-overlay.dtsi
 	// says gpio7
@@ -1305,18 +1423,12 @@
 		bias-pull-down;
 	};
 
-	mdp_vsync_active: mdp-vsync-active-state {
-		pins = "gpio86";
-		function = "mdp_vsync";
-		drive-strength = <2>;
-		bias-pull-down;
-	};
-
-	mdp_vsync_suspend: mdp-vsync-suspend-state {
-		pins = "gpio86";
-		function = "mdp_vsync";
-		drive-strength = <2>;
-		bias-pull-down;
+	wcd_default: wcd-reset-n-active-state {
+		pins = "gpio101";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-disable;
+		output-low;
 	};
 
 	wlan_en: wlan-en-state {
@@ -1325,14 +1437,10 @@
 		drive-strength = <8>;
 		bias-pull-down;
 	};
-	
-	wcd_default: wcd-reset-n-active-state {
-		pins = "gpio101";
-		function = "gpio";
-		drive-strength = <16>;
-		bias-disable;
-		output-low;
-	};
+};
+
+&uart7 {
+	status = "okay";
 };
 
 /* Pinctrl */
@@ -1345,6 +1453,7 @@
 			bias-disable;
 			output-high;
 		};
+
 		ws-pins {
 			pins = "gpio7";
 			// Correct function name from the driver source
@@ -1353,6 +1462,7 @@
 			bias-disable;
 			output-high;
 		};
+
 		data0-pins {
 			pins = "gpio8";
 			// Correct function name from the driver source
@@ -1361,6 +1471,7 @@
 			bias-disable;
 			output-high;
 		};
+
 		data1-pins {
 			pins = "gpio9";
 			// Correct function name from the driver source
@@ -1370,10 +1481,6 @@
 			output-high;
 		};
 	};
-};
-
-&uart7 {
-	status = "okay";
 };
 
 &uart14 {
@@ -1444,60 +1551,10 @@
 
 // Additional stuff not present in mtp/qrd
 
-&mdss {
-	status = "okay";
-};
-
-// Disabled for now until upstream DP merged
-&mdss_dp0 {
-	status = "disabled";
-};
-
-&mdss_dp0_out {
-	data-lanes = <0 1>;
-};
-
-&mdss_dsi0 {
-	vdda-supply = <&vreg_l3g_1p2>;
-
-	status = "okay";
-
-	panel@0 {
-		compatible = "oneplus,dodge-panel";
-		reg = <0>;
-
-		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync_active>;
-		pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync_suspend>;
-
-		vddio-supply = <&vreg_l12b_1p8>;
-		vci-supply = <&vreg_l13b_3p0>;
-		vdd-supply = <&vreg_l11b_1p0>;
-
-		reset-gpios = <&tlmm 98 GPIO_ACTIVE_LOW>;
-
-		port {
-			panel0_in: endpoint {
-				remote-endpoint = <&mdss_dsi0_out>;
-			};
-		};
-	};
-};
-
-&mdss_dsi0_out {
-	remote-endpoint = <&panel0_in>;
-	data-lanes = <0 1 2 3>;
-};
-
-&mdss_dsi0_phy {
-	vdds-supply = <&vreg_l3i_0p88>;
-
-	status = "okay";
-};
-
 // Touch
 &spi4 {
 	status = "okay";
+
 	synaptics_tcm_hbp@0 {
 		compatible = "synaptics,tcm-spi-hbp";
 		reg = <0>;
@@ -1518,6 +1575,8 @@
 		touchpanel,tx-rx-num = <17 38>;
 		touchpanel,tp_ic_type = <2>;
 
+		status = "disabled"; // Bugs in driver after porting to gpiod
+
 		S3910_PANEL7 {
 			touchpanel,tx-rx-num = <18 40>;
 		};
@@ -1526,52 +1585,12 @@
 
 &i2c_hub_3 {
 	status = "okay";
+
 	bq28z610: fuel-gauge@55 {
 		compatible = "ti,bq27541";
 		reg = <0x55>;
 		monitored-battery = <&bat>;
 	};
-};
-
-&i2c3 {
-	status = "okay";
-
-	wcd_usbss: typec-mux@e {
-		compatible = "qcom,wcd9395-usbss", "qcom,wcd9390-usbss";
-		reg = <0xe>;
-
-		vdd-supply = <&vreg_l15b_1p8>;
-		reset-gpios = <&tlmm 152 GPIO_ACTIVE_HIGH>;
-
-		mode-switch;
-		orientation-switch;
-
-		ports {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			port@0 {
-				reg = <0>;
-
-				wcd_usbss_sbu_mux: endpoint {
-					remote-endpoint = <&pmic_glink_sbu>;
-				};
-			};
-
-			port@1 {
-				reg = <1>;
-
-				wcd_usbss_headset_out: endpoint {
-					remote-endpoint = <&wcd_codec_headset_in>;
-				};
-			};
-		};
-	};
-};
-
-&qup_i2c3_data_clk {
-	/* Use internal I2C pull-up */
-	bias-pull-up = <2200>;
 };
 
 &i2c_master_hub_0 {
@@ -1580,6 +1599,7 @@
 
 &i2c_hub_9 {
 	status = "disabled";
+
 	magnachip: magnachip@10 {
 		compatible = "oplus,dhall-ak09970";
 		reg = <0x10>;
@@ -1592,7 +1612,6 @@
 		pinctrl-0 = <&hall_interrupt_input>;
 	};
 };
-
 
 &gpi_dma1 {
 	status = "okay";
