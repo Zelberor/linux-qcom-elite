@@ -35,11 +35,13 @@
 	qcom,board-id = <0x40008 0>;
 
 	reserved-memory {
-		splash_memory: splash_region@fc800000 {
-			reg = <0x0 0xfc800000 0x0 0x02b00000>;
-			label = "cont_splash_region";
-			no-map;
-		};
+		// Disabled so the bootloader does not conflict with the kernel
+		// When enabled leads to iommu page faults and unreliable display init
+		// splash_memory: splash_region@fc800000 {
+		// 	reg = <0x0 0xfc800000 0x0 0x02b00000>;
+		// 	label = "cont_splash_region";
+		// 	no-map;
+		// };
 
 		ramoops: ramoops@a3000000 {
 			compatible = "ramoops";
@@ -110,14 +112,15 @@
 		#size-cells = <2>;
 		ranges;
 
-		framebuffer: framebuffer@fc800000 {
-			compatible = "simple-framebuffer";
-			reg = <0x00 0xfc800000 0x00 0x2b00000>;
-			width = <1440>;
-			height = <3168>;
-			stride = <(1440 * 4)>;
-			format = "a8r8g8b8";
-		};
+		// Use for debugging with the splash_memory: splash_region@fc800000
+		// framebuffer: framebuffer@fc800000 {
+		// 	compatible = "simple-framebuffer";
+		// 	reg = <0x00 0xfc800000 0x00 0x2b00000>;
+		// 	width = <1440>;
+		// 	height = <3168>;
+		// 	stride = <(1440 * 4)>;
+		// 	format = "a8r8g8b8";
+		// };
 	};
 
 	clocks {
@@ -499,10 +502,14 @@
 		};
 
 		// rpmh-regulator-ldob11
+		// Display vdd regulator
+		// Values matched with vendor/qcom/opensource/display-devicetree/display/sun-sde-display-common.dtsi
 		vreg_l11b_1p0: ldo11 {
 			regulator-name = "vreg_l11b_1p0";
-			regulator-min-microvolt = <1064000>;
-			regulator-max-microvolt = <1292000>;
+			// Min is 1064000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			regulator-min-microvolt = <1000000>;
+			// Max is 1292000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			regulator-max-microvolt = <1100000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
@@ -510,11 +517,13 @@
 		};
 
 		// rpmh-regulator-ldob12
+		// Display vddio regulator
+		// Values matched with vendor/qcom/opensource/display-devicetree/display/sun-sde-display-common.dtsi
 		vreg_l12b_1p8: ldo12 {
 			regulator-name = "vreg_l12b_1p8";
-			regulator-min-microvolt = <1200000>;
+			// Min is 1200000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
+			regulator-min-microvolt = <1800000>;
 			// Max is 1900000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
-			// Leaving at 1800000 for parity with mtp
 			regulator-max-microvolt = <1800000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 			regulator-allow-set-load;
@@ -523,6 +532,8 @@
 		};
 
 		// rpmh-regulator-ldob13
+		// Display vci regulator
+		// Values matched with vendor/qcom/opensource/display-devicetree/display/sun-sde-display-common.dtsi
 		vreg_l13b_3p0: ldo13 {
 			regulator-name = "vreg_l13b_3p0";
 			regulator-min-microvolt = <3000000>;
@@ -1029,10 +1040,10 @@
 	// 	vreg_l3n_2p8: ldo3 {
 	// 		regulator-name = "vreg_l3n_2p8";
 	// 		// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
-	//		// But 1800000 in mtp -> changed to 2800000
+	// 		// But 1800000 in mtp -> changed to 2800000
 	// 		regulator-min-microvolt = <2800000>;
 	// 		// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
-	//		// But 1800000 in mtp -> changed to 2800000
+	// 		// But 1800000 in mtp -> changed to 2800000
 	// 		regulator-max-microvolt = <2800000>;
 	// 		// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 	// 		regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -1042,10 +1053,10 @@
 	// 	vreg_l4n_2p8: ldo4 {
 	// 		regulator-name = "vreg_l4n_2p8";
 	// 		// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
-	//		// But 1800000 in mtp -> changed to 2800000
+	// 		// But 1800000 in mtp -> changed to 2800000
 	// 		regulator-min-microvolt = <2800000>;
 	// 		// !!Set to 2800000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi!!
-	//		// But 1800000 in mtp -> changed to 2800000
+	// 		// But 1800000 in mtp -> changed to 2800000
 	// 		regulator-max-microvolt = <2800000>;
 	// 		// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 	// 		regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -1162,13 +1173,18 @@
 
 		reset-gpios = <&tlmm 98 GPIO_ACTIVE_LOW>;
 
+		// From vendor/qcom/opensource/display-devicetree/oplus/dodge-23821-display-sun-overlay.dtsi
+		vddr_en-gpios = <&pm8550ve_f_gpios 7 GPIO_ACTIVE_HIGH>;
+
 		vddio-supply = <&vreg_l12b_1p8>;
 		vci-supply = <&vreg_l13b_3p0>;
+		// vdd-supply is not enabled by the driver currently. (Apparently not needed?)
 		vdd-supply = <&vreg_l11b_1p0>;
 
-		pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync>;
-		pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync>;
-		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&disp0_reset_n_suspend>, 
+			    <&mdp_vsync>, 
+			    <&sde_esync>;
+		pinctrl-names = "default";
 
 		port {
 			panel0_in: endpoint {
@@ -1288,28 +1304,28 @@
 	firmware-name = "qcom/sm8750/OnePlus/adsp.mbn",
 			"qcom/sm8750/OnePlus/adsp_dtb.mbn";
 
-	status = "okay";
+	status = "disabled";
 };
 
 &remoteproc_cdsp {
 	firmware-name = "qcom/sm8750/OnePlus/cdsp.mbn",
 			"qcom/sm8750/OnePlus/cdsp_dtb.mbn";
 
-	status = "okay";
+	status = "disabled";
 };
 
 &remoteproc_mpss {
 	firmware-name = "qcom/sm8750/OnePlus/modem.mbn",
 			"qcom/sm8750/OnePlus/modem_dtb.mbn";
 
-	status = "okay";
+	status = "disabled";
 };
 
 &ipa {
 	qcom,gsi-loader = "self";
 	memory-region = <&ipa_fw_mem>;
 	firmware-name = "qcom/sm8750/ipa_fws.mbn";
-	status = "okay";
+	status = "disabled";
 };
 
 &swr1 {
@@ -1354,6 +1370,7 @@
 	/* reserved for secure world */
 	gpio-reserved-ranges = <36 4>, <74 1>;
 
+	// Touchscreen gpio from kernel_platform/qcom/opensource/devicetree/qcom/sun-pinctrl.dtsi
 	ts_reset_active: ts_reset_active-state {
 		pins = "gpio161";
 		function = "gpio";
@@ -1399,6 +1416,15 @@
 		};
 	};
 
+	// From vendor/qcom/opensource/display-devicetree/display/sun-sde-display-pinctrl.dtsi
+	sde_esync: sde_esync {
+		pins = "gpio88";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	// From vendor/qcom/opensource/display-devicetree/display/sun-sde-display-pinctrl.dtsi
 	mdp_vsync: mdp-vsync-state {
 		pins = "gpio86";
 		function = "mdp_vsync";
@@ -1406,15 +1432,12 @@
 		bias-pull-down;
 	};
 
-	// TODO: Check pin
-	// android_kernel_modules_and_devicetree_oneplus_sm8750/vendor/qcom/opensource/display-devicetree/oplus/dodge-23821-display-sun-overlay.dtsi
-	// says gpio7
-	disp0_reset_n_active: disp0-reset-n-active-state {
-		pins = "gpio98";
-		function = "gpio";
-		drive-strength = <8>;
-		bias-disable;
-	};
+	// disp0_reset_n_active: disp0-reset-n-active-state {
+	// 	pins = "gpio98";
+	// 	function = "gpio";
+	// 	drive-strength = <8>;
+	// 	bias-disable;
+	// };
 
 	disp0_reset_n_suspend: disp0-reset-n-suspend-state {
 		pins = "gpio98";
@@ -1551,11 +1574,28 @@
 
 // Additional stuff not present in mtp/qrd
 
+&pm8550ve_f_gpios {
+	// From vendor/qcom/opensource/display-devicetree/oplus/dodge-23821-display-sun-overlay.dtsi
+	// Enabling this section leads to
+	// "qcom-spmi-gpio c400000.spmi:pmic@5:gpio@8800: pin_config_group_set op failed for group 6"
+	// Used by the panel driver
+	// dsi_vddr_en_suspend: dsi_vddr_en_suspend {
+	// 	pins = "gpio7";
+	// 	function = "normal";
+	// 	power-source = <1>; /* 1.8V */
+	// 	bias-disable;   /* no pull */
+	// 	output-enable;
+	// 	output-low;
+	// 	drive-strength = <2>;  /* 2 mA */
+	// };
+};
+
 // Touch
 &spi4 {
 	status = "okay";
 
 	synaptics_tcm_hbp@0 {
+		// TODO: SPI driver synaptics_tcm_spi has no spi_device_id for synaptics,tcm-spi-hbp
 		compatible = "synaptics,tcm-spi-hbp";
 		reg = <0>;
 		chip-name = "S3910";
@@ -1683,6 +1723,8 @@
 };
 
 &pmd8028 {
-	// Access fails with transaction failed -5
+	// Access fails with
+	// "spmi spmi-0: pmic_arb_wait_for_done: 0x4 0x104: transaction failed (0x3) reg: 0x1ac8"
+	// "pmic-spmi 0-04: probe with driver pmic-spmi failed with error -5"
 	status = "disabled";
 };
