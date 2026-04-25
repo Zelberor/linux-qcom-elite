@@ -1595,7 +1595,6 @@
 	status = "okay";
 
 	synaptics_tcm_hbp@0 {
-		// TODO: SPI driver synaptics_tcm_spi has no spi_device_id for synaptics,tcm-spi-hbp
 		compatible = "synaptics,tcm-spi-hbp";
 		reg = <0>;
 		chip-name = "S3910";
@@ -1603,9 +1602,9 @@
 		interrupt-parent = <&tlmm>;
 		interrupts = <162 0x2008>;
 		vdd-supply = <&vreg_l4b_1p8>;
-		synaptics,irq-gpio = <&tlmm 162 0x2008>;
+		synaptics,irq-gpio = <&tlmm 162 GPIO_ACTIVE_LOW>;
 		synaptics,reset-gpio = <&tlmm 161 GPIO_ACTIVE_LOW>;
-		synaptics,avdd-gpio = <&pm8550vs_j_gpios 3 GPIO_ACTIVE_LOW>;
+		synaptics,avdd-gpio = <&pm8550vs_j_gpios 3 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "ts_spi_active", "ts_spi_suspend";
 		pinctrl-0 = <&ts_int_active &ts_reset_active>;
 		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
@@ -1615,7 +1614,7 @@
 		touchpanel,tx-rx-num = <17 38>;
 		touchpanel,tp_ic_type = <2>;
 
-		status = "disabled"; // Bugs in driver after porting to gpiod
+		status = "okay";
 
 		S3910_PANEL7 {
 			touchpanel,tx-rx-num = <18 40>;
