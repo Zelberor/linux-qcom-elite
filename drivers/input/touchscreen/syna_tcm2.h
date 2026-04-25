@@ -654,7 +654,6 @@ struct syna_hw_bus_data {
 
 struct syna_hw_attn_data {
 	struct gpio_desc *irq_gpio;
-	int irq_on_state;
 	unsigned long irq_flags;
 	int irq_id;
 	bool irq_enabled;
@@ -663,7 +662,6 @@ struct syna_hw_attn_data {
 
 struct syna_hw_rst_data {
 	struct gpio_desc *reset_gpio;
-	int reset_on_state;
 	unsigned int reset_delay_ms;
 	unsigned int reset_active_ms;
 	struct mutex reset_en_mutex;
@@ -673,7 +671,6 @@ struct syna_hw_pwr_data {
 	int psu;
 	struct gpio_desc *vdd_gpio;
 	struct gpio_desc *avdd_gpio;
-	int power_on_state;
 	unsigned int power_on_delay_ms;
 	unsigned int vdd;
 	unsigned int vled;
