@@ -29,6 +29,7 @@
  * DOLLARS.
  */
 
+#include <linux/printk.h>
 #include "syna_tcm2.h"
 #include <linux/sched/signal.h>
 #include <linux/wait.h>
@@ -653,7 +654,7 @@ static irqreturn_t syna_dev_isr(int irq, void *data)
 	struct syna_tcm *tcm = data;
 	struct syna_hw_attn_data *attn = &tcm->hw_if->bdata_attn;
 
-	if (unlikely(gpiod_get_value(attn->irq_gpio) != attn->irq_on_state))
+	if (unlikely(gpiod_get_value(attn->irq_gpio) != 1))
 		goto exit;
 
 	tcm->isr_pid = current->pid;
@@ -1997,16 +1998,20 @@ static int syna_dev_connect(struct syna_tcm *tcm)
 
 	if (hw_if->ops_power_on) {
 		retval = hw_if->ops_power_on(hw_if, true);
-		if (retval < 0)
+		if (retval < 0) {
+			pr_err("syna: power on failed: %i", retval);
 			return -ENODEV;
+		}
 	}
 
 	if (hw_if->ops_hw_reset)
 		hw_if->ops_hw_reset(hw_if);
 
 	retval = syna_tcm_detect_device(tcm->tcm_dev);
-	if (retval < 0)
+	if (retval < 0) {
+		pr_err("syna: detect_device failed: %i", retval);
 		goto err_detect_dev;
+	}
 
 	switch (retval) {
 	case MODE_APPLICATION_FIRMWARE:
@@ -2262,7 +2267,9 @@ static int syna_dev_probe(struct platform_device *pdev)
 	return 0;
 	tcm->dev_disconnect(tcm);
 err_manufacture_info:
+	pr_err("failed to get syna touchscreen manufacture_info: %i", retval);
 err_connect:
+	pr_err("failed to connect to syna touchscreen: %i", retval);
 	syna_tcm_buf_release(&tcm->event_data);
 	mutex_destroy(&tcm->mutex);
 err_allocate_cdev:

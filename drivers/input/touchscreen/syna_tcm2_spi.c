@@ -29,6 +29,7 @@
  * DOLLARS.
  */
 
+#include <linux/printk.h>
 #include <linux/spi/spi.h>
 #include "syna_tcm2.h"
 #include <linux/pinctrl/consumer.h>
@@ -56,51 +57,12 @@ static void syna_spi_hw_reset(struct syna_hw_interface *hw_if) {
 
 	if (rst->reset_gpio != NULL) {
 		syna_pal_mutex_lock(&rst->reset_en_mutex);
-		gpiod_set_value(rst->reset_gpio, rst->reset_on_state);
+		gpiod_set_value(rst->reset_gpio, 1);
 		msleep(rst->reset_active_ms);
-		gpiod_set_value(rst->reset_gpio, !rst->reset_on_state);
+		gpiod_set_value(rst->reset_gpio, 0);
 		msleep(rst->reset_delay_ms);
 		syna_pal_mutex_unlock(&rst->reset_en_mutex);
 	}
-}
-
-static int syna_spi_request_gpio(struct gpio_desc *gpio, bool config, int dir, int state, char *label) {
-	int retval;
-
-	struct device *dev = syna_request_managed_device();
-
-	if (!dev)
-		return -ENODEV;
-
-	if (gpio == NULL)
-		return -EINVAL;
-
-	if (config) {
-		retval = snprintf(label, 16, "tcm_gpio_%d\n", desc_to_gpio(gpio));
-		if (retval < 0)
-			return retval;
-
-		if (dir == 0)
-			retval = gpiod_direction_input(gpio);
-		else
-			retval = gpiod_direction_output(gpio, state);
-
-		if (retval < 0)
-			return retval;
-	}
-
-	return 0;
-}
-
-static void syna_spi_release_gpio(struct syna_hw_interface *hw_if)
-{
-	struct syna_hw_attn_data *attn = &hw_if->bdata_attn;
-	struct syna_hw_rst_data *rst = &hw_if->bdata_rst;
-
-	if (rst->reset_gpio != NULL)
-		syna_spi_request_gpio(rst->reset_gpio, false, 0, 0, NULL);
-	if (attn->irq_gpio != NULL)
-		syna_spi_request_gpio(attn->irq_gpio, false, 0, 0, NULL);
 }
 
 static int syna_spi_active_pinctrl(struct syna_hw_interface *hw_if)
@@ -118,47 +80,18 @@ err_active_pinctrl:
 	return retval;
 }
 
-static int syna_spi_config_gpio(struct syna_hw_interface *hw_if) {
-	int retval;
-	static char str_irq_gpio[32] = {0};
-	static char str_rst_gpio[32] = {0};
-	struct syna_hw_attn_data *attn = &hw_if->bdata_attn;
-	struct syna_hw_rst_data *rst = &hw_if->bdata_rst;
-
-	if (attn->irq_gpio != NULL) {
-		retval = syna_spi_request_gpio(attn->irq_gpio, true, 0, 0, str_irq_gpio);
-		if (retval < 0)
-			goto err_set_gpio_irq;
-	}
-
-	if (rst->reset_gpio != NULL) {
-		retval = syna_spi_request_gpio(rst->reset_gpio, true, 1, !rst->reset_on_state, str_rst_gpio);
-		if (retval < 0)
-			goto err_set_gpio_reset;
-	}
-
-	return 0;
-
-err_set_gpio_reset:
-	if (attn->irq_gpio != NULL)
-		syna_spi_request_gpio(attn->irq_gpio, false, 0, 0, NULL);
-err_set_gpio_irq:
-	return retval;
-}
-
 static int syna_spi_enable_pwr_gpio(struct syna_hw_interface *hw_if, bool en) {
 	struct syna_hw_pwr_data *pwr = &hw_if->bdata_pwr;
-	int state = (en) ? pwr->power_on_state : !pwr->power_on_state;
 	int ret = 0;
 
 	if (pwr->avdd_gpio != NULL) {
-		ret = gpiod_direction_output(pwr->avdd_gpio, state);
+		ret = gpiod_set_value(pwr->avdd_gpio, en);
 		if (ret)
 			return ret;
 	}
 
 	if (pwr->vdd_gpio != NULL) {
-		ret = gpiod_direction_output(pwr->vdd_gpio, state);
+		ret = gpiod_set_value(pwr->vdd_gpio, en);
 		if (ret)
 			return ret;
 	}
@@ -197,12 +130,16 @@ static int syna_spi_power_on(struct syna_hw_interface *hw_if, bool en) {
 	struct syna_hw_pwr_data *pwr = &hw_if->bdata_pwr;
 
 	retval = syna_spi_enable_pwr_gpio(hw_if, en);
-	if (retval < 0)
+	if (retval < 0) {
+		pr_err("syna: failed to enable gpio power: %i", retval);
 		return retval;
+	}
 
 	retval = syna_spi_enable_regulator(hw_if, en);
-	if (retval < 0)
+	if (retval < 0) {
+		pr_err("syna: failed to enable regulator: %i", retval);
 		return retval;
+	}
 
 	msleep(pwr->power_on_delay_ms);
 
@@ -249,17 +186,10 @@ exit:
 static int syna_spi_config_psu(struct syna_hw_interface *hw_if)
 {
 	int retval;
-	static char str_avdd_gpio[32] = {0};
 	struct syna_hw_pwr_data *pwr = &hw_if->bdata_pwr;
 
 	if (pwr->psu == PSU_GPIO) {
-		if (pwr->avdd_gpio != NULL) {
-			retval = syna_spi_request_gpio(pwr->avdd_gpio, true, 1, !pwr->power_on_state, str_avdd_gpio);
-			if (retval < 0) {
-				syna_spi_request_gpio(pwr->vdd_gpio, false, 0, 0, NULL);
-				return retval;
-			}
-		}
+		// Lol
 	} else {
 		retval = syna_spi_get_regulator(hw_if, true);
 		if (retval < 0)
@@ -274,7 +204,7 @@ static int syna_spi_release_psu(struct syna_hw_interface *hw_if)
 	struct syna_hw_pwr_data *pwr = &hw_if->bdata_pwr;
 
 	if (pwr->psu == PSU_GPIO) {
-		syna_spi_request_gpio(pwr->avdd_gpio, false, 0, 0, NULL);
+		// Lol
 	} else {
 		syna_spi_get_regulator(hw_if, false);
 	}
@@ -318,41 +248,33 @@ exit:
 
 static int syna_spi_parse_dt(struct syna_hw_interface *hw_if, struct device *dev) {
 	int retval;
-	struct property *prop;
-	struct device_node *np = dev->of_node;
 	struct syna_hw_attn_data *attn = &hw_if->bdata_attn;
 	struct syna_hw_pwr_data *pwr = &hw_if->bdata_pwr;
 	struct syna_hw_rst_data *rst = &hw_if->bdata_rst;
 	struct syna_hw_bus_data *bus = &hw_if->bdata_io;
 
-	prop = of_find_property(np, "synaptics,irq-gpio", NULL);
-	if (prop && prop->length) {
-		attn->irq_gpio = devm_gpiod_get(dev, "synaptics,irq-gpio", 0);
-	} else {
+	attn->irq_gpio = devm_gpiod_get(dev, "synaptics,irq", 0);
+	if (IS_ERR(attn->irq_gpio)) {
+		pr_err("failed to get synaptics,irq-gpio: %ld\n", PTR_ERR(attn->irq_gpio));
 		attn->irq_gpio = NULL;
 	}
 
-	attn->irq_on_state = 0;
 	pwr->psu = (int)PSU_REGULATOR;
 
-	prop = of_find_property(np, "synaptics,avdd-gpio", NULL);
-	if (prop && prop->length) {
-		pwr->avdd_gpio = devm_gpiod_get(dev, "synaptics,avdd-gpio", 0);
-	} else {
+	pwr->avdd_gpio = devm_gpiod_get(dev, "synaptics,avdd", GPIOD_OUT_LOW);
+	if (IS_ERR(pwr->avdd_gpio)) {
+		pr_err("failed to get synaptics,avdd-gpio: %ld\n", PTR_ERR(pwr->avdd_gpio));
 		pwr->avdd_gpio = NULL;
 	}
 	
-	pwr->power_on_state = 1;
 	pwr->power_on_delay_ms = 200;
 
-	prop = of_find_property(np, "synaptics,reset-gpio", NULL);
-	if (prop && prop->length) {
-		rst->reset_gpio = devm_gpiod_get(dev, "synaptics,reset-gpio", 0);
-	} else {
+	rst->reset_gpio = devm_gpiod_get(dev, "synaptics,reset", GPIOD_OUT_HIGH);
+	if (IS_ERR(rst->reset_gpio)) {
+		pr_err("failed to get synaptics,reset-gpio: %ld\n", PTR_ERR(rst->reset_gpio));
 		rst->reset_gpio = NULL;
 	}
 
-	rst->reset_on_state = 0;
 	rst->reset_active_ms = 10;
 	rst->reset_delay_ms = 80;
 	
@@ -532,15 +454,12 @@ static struct syna_hw_interface syna_spi_hw_if = {
 	},
 	.bdata_attn = {
 		.irq_enabled = false,
-		.irq_on_state = 0,
 	},
 	.bdata_rst = {
-		.reset_on_state = 0,
 		.reset_delay_ms = 80,
 		.reset_active_ms = 10,
 	},
 	.bdata_pwr = {
-		.power_on_state = 1,
 		.power_on_delay_ms = 200,
 	},
 	.ops_power_on = syna_spi_power_on,
@@ -584,10 +503,6 @@ static int syna_spi_probe(struct spi_device *spi)
 	if (retval < 0)
 		return retval;
 
-	retval = syna_spi_config_gpio(&syna_spi_hw_if);
-	if (retval < 0)
-		return retval;
-
 	retval = syna_spi_active_pinctrl(&syna_spi_hw_if);
 	if (retval < 0)
 		return retval;
@@ -601,13 +516,12 @@ static int syna_spi_probe(struct spi_device *spi)
 
 static void syna_spi_remove(struct spi_device *spi)
 {
-	syna_spi_release_gpio(&syna_spi_hw_if);
 	syna_spi_release_psu(&syna_spi_hw_if);
 	syna_spi_device->dev.platform_data = NULL;
 	platform_device_unregister(syna_spi_device);
 }
 static const struct spi_device_id syna_spi_id_table[] = {
-	{SPI_MODULE_NAME, 0},
+	{"tcm-spi-hbp", 0},
 	{},
 };
 MODULE_DEVICE_TABLE(spi, syna_spi_id_table);
