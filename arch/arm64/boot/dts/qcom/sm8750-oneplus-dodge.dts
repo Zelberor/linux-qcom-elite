@@ -45,7 +45,7 @@
 
 		ramoops: ramoops@a3000000 {
 			compatible = "ramoops";
-			reg = <0 0xa3000000 0 0x240000>;
+			reg = <0 0xa5000000 0 0x240000>;
 			console-size = <0x40000>;
 			mem-type = <2>;
 			pmsg-size = <0x200000>;
@@ -1139,7 +1139,8 @@
 };
 
 &iris {
-	status = "okay";
+	// Needs firmware
+	status = "disabled";
 };
 
 &lpass_vamacro {
@@ -1300,11 +1301,18 @@
 	status = "okay";
 };
 
-&remoteproc_adsp {
-	firmware-name = "qcom/sm8750/OnePlus/adsp.mbn",
-			"qcom/sm8750/OnePlus/adsp_dtb.mbn";
+&adspslpi_mem {
+	// Defined with reg = <0x0 0x9ee00000 0x0 0x5080000>;
+	// in kernel_platform/qcom/opensource/devicetree/qcom/sun.dtsi
+	// But 0x5080000 is still not enough to avoid the segment outside memory range error
+	reg = <0x0 0x9ee00000 0x0 0x6000000>;
+};
 
-	status = "disabled";
+&remoteproc_adsp {
+	firmware-name = "qcom/sm8750/OnePlus/adsp.mdt",
+			"qcom/sm8750/OnePlus/adsp_dtb.mdt";
+
+	status = "okay";
 };
 
 &remoteproc_cdsp {
