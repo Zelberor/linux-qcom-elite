@@ -248,6 +248,9 @@
 		#size-cells = <0>;
 		orientation-gpios = <&tlmm 61 GPIO_ACTIVE_HIGH>;
 
+		// vendor/oplus/kernel/charger/v2/charger_ic/oplus_hal_adsp.c
+		// Contains necessary information to enable otg power
+
 		connector@0 {
 			compatible = "usb-c-connector";
 			reg = <0>;
@@ -1133,11 +1136,6 @@
 	};
 };
 
-&iris {
-	// Needs firmware
-	status = "disabled";
-};
-
 &lpass_vamacro {
 	// Pinctl missing? -> mtp?
 
@@ -1303,31 +1301,38 @@
 };
 
 &remoteproc_adsp {
-	firmware-name = "qcom/sm8750/OnePlus/adsp.mdt",
-			"qcom/sm8750/OnePlus/adsp_dtb.mdt";
+	firmware-name = "qcom/sm8750/oneplus/dodge/adsp.mbn",
+			"qcom/sm8750/oneplus/dodge/adsp_dtb.mbn";
 
 	status = "okay";
 };
 
 &remoteproc_cdsp {
-	firmware-name = "qcom/sm8750/OnePlus/cdsp.mbn",
-			"qcom/sm8750/OnePlus/cdsp_dtb.mbn";
+	firmware-name = "qcom/sm8750/oneplus/dodge/cdsp.mbn",
+			"qcom/sm8750/oneplus/dodge/cdsp_dtb.mbn";
 
-	status = "disabled";
+	status = "okay";
 };
 
 &remoteproc_mpss {
-	firmware-name = "qcom/sm8750/OnePlus/modem.mbn",
-			"qcom/sm8750/OnePlus/modem_dtb.mbn";
+	firmware-name = "qcom/sm8750/oneplus/dodge/modem.mbn",
+			"qcom/sm8750/oneplus/dodge/modem_dtb.mbn";
 
-	status = "disabled";
+	status = "okay";
+};
+
+&iris {
+	firmware-name = "qcom/sm8750/oneplus/dodge/vpu35_4v.mbn";
+
+	status = "okay";
 };
 
 &ipa {
+	firmware-name = "qcom/sm8750/oneplus/dodge/ipa_fws.mbn";
+
 	qcom,gsi-loader = "self";
 	memory-region = <&ipa_fw_mem>;
-	firmware-name = "qcom/sm8750/ipa_fws.mbn";
-	status = "disabled";
+	status = "okay";
 };
 
 &swr1 {
