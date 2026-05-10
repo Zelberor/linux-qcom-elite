@@ -760,13 +760,13 @@ static int qcom_pas_assign_memory_region(struct qcom_pas *pas)
 	return 0;
 }
 
-static void qcom_pas_unassign_memory_region(struct qcom_pas *pas)
+static void __qcom_pas_unassign_memory_region(struct qcom_pas *pas, bool ignore_shared)
 {
 	struct qcom_scm_vmperm perm;
 	int offset;
 	int ret;
 
-	if (!pas->region_assign_idx || pas->region_assign_shared)
+	if (!pas->region_assign_idx || (pas->region_assign_shared && !ignore_shared))
 		return;
 
 	for (offset = 0; offset < pas->region_assign_count; ++offset) {
@@ -780,6 +780,14 @@ static void qcom_pas_unassign_memory_region(struct qcom_pas *pas)
 		if (ret < 0)
 			dev_err(pas->dev, "unassign memory %d failed\n", offset);
 	}
+}
+
+static void qcom_pas_unassign_memory_region(struct qcom_pas *pas) {
+	__qcom_pas_unassign_memory_region(pas, false);
+}
+
+static void qcom_pas_unassign_memory_region_force(struct qcom_pas *pas) {
+	__qcom_pas_unassign_memory_region(pas, true);
 }
 
 static int qcom_pas_probe(struct platform_device *pdev)
@@ -937,14 +945,11 @@ free_rproc:
 	return ret;
 }
 
-static void qcom_pas_remove(struct platform_device *pdev)
+static void qcom_pas_stop_rproc(struct qcom_pas *pas)
 {
-	struct qcom_pas *pas = platform_get_drvdata(pdev);
-
 	rproc_del(pas->rproc);
 
 	qcom_q6v5_deinit(&pas->q6v5);
-	qcom_pas_unassign_memory_region(pas);
 	qcom_remove_glink_subdev(pas->rproc, &pas->glink_subdev);
 	qcom_remove_sysmon_subdev(pas->sysmon);
 	qcom_remove_smd_subdev(pas->rproc, &pas->smd_subdev);
@@ -952,6 +957,23 @@ static void qcom_pas_remove(struct platform_device *pdev)
 	qcom_remove_ssr_subdev(pas->rproc, &pas->ssr_subdev);
 	qcom_pas_pds_detach(pas, pas->proxy_pds, pas->proxy_pd_count);
 	device_init_wakeup(pas->dev, false);
+}
+
+static void qcom_pas_remove(struct platform_device *pdev)
+{
+	struct qcom_pas *pas = platform_get_drvdata(pdev);
+
+	qcom_pas_stop_rproc(pas);
+	qcom_pas_unassign_memory_region(pas);
+}
+
+static void qcom_pas_shutdown(struct platform_device *pdev)
+{
+	struct qcom_pas *pas = platform_get_drvdata(pdev);
+
+	qcom_pas_stop_rproc(pas);
+	// Fixes secure memory allocations after kexec soft reboot
+	qcom_pas_unassign_memory_region_force(pas);
 }
 
 static const struct qcom_pas_data adsp_resource_init = {
@@ -1583,7 +1605,7 @@ static const struct qcom_pas_data sm8750_mpss_resource = {
 	.sysmon_name = "modem",
 	.ssctl_id = 0x12,
 	.smem_host_id = 1,
-	.region_assign_idx = 3,
+	.region_assign_idx = 2,
 	.region_assign_count = 2,
 	.region_assign_vmid = QCOM_SCM_VMID_MSS_MSA,
 };
@@ -1687,6 +1709,7 @@ MODULE_DEVICE_TABLE(of, qcom_pas_of_match);
 static struct platform_driver qcom_pas_driver = {
 	.probe = qcom_pas_probe,
 	.remove = qcom_pas_remove,
+	.shutdown = qcom_pas_shutdown,
 	.driver = {
 		.name = "qcom_q6v5_pas",
 		.of_match_table = qcom_pas_of_match,
