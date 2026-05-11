@@ -300,8 +300,8 @@
 		regulator-boot-on;
 	};
 
-	wcn7880-pmu { // No compatible drivers
-		compatible = "qcom,wcn7880-pmu";
+	wcn7850-pmu {
+		compatible = "qcom,wcn7850-pmu";
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&wlan_en>, <&bt_default>;
@@ -316,8 +316,6 @@
 		vdddig-supply = <&vreg_s1d_0p97>;
 		vddrfa1p2-supply = <&vreg_s7i_1p2>;
 		vddrfa1p8-supply = <&vreg_s3g_1p8>;
-			
-		status = "disabled";
 
 		clocks = <&rpmhcc RPMH_RF_CLK1>;
 
@@ -1237,20 +1235,17 @@
 };
 
 &pcie0 {
-	// wake-gpios = <&tlmm 104 GPIO_ACTIVE_HIGH>;
-	// perst-gpios = <&tlmm 102 GPIO_ACTIVE_LOW>;
-
 	pinctrl-0 = <&pcie0_default_state>;
 	pinctrl-names = "default";
 
-	status = "disabled";
+	status = "okay";
 };
 
 &pcie0_phy {
 	vdda-phy-supply = <&vreg_l1f_0p88>;
 	vdda-pll-supply = <&vreg_l3g_1p2>;
 
-	status = "disabled";
+	status = "okay";
 };
 
 &pcieport0 {
@@ -1518,10 +1513,10 @@
 };
 
 &uart14 {
-	status = "disabled";
+	status = "okay";
 
 	bluetooth {
-		compatible = "qcom,wcn7880-bt";
+		compatible = "qcom,wcn7850-bt";
 
 		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
 		vddaon-supply = <&vreg_pmu_aon_0p59>;
@@ -1532,7 +1527,6 @@
 		vddrfa1p8-supply = <&vreg_pmu_rfa_1p8>;
 
 		max-speed = <3200000>;
-		status = "disabled";
 	};
 };
 
