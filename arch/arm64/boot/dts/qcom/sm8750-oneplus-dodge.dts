@@ -889,6 +889,10 @@
 		// Disabled in kernel_platform/qcom/opensource/devicetree/qcom/sun-pmic-overlay-v8.dtsi
 
 		// rpmh-regulator-ldoj1
+		// Defaults: min: 880000, max: 920000
+		// Overridden by
+		// kernel_platform/qcom/opensource/devicetree/qcom/sun-mtp.dtsi -> min 912000
+		// drivers/phy/qualcomm/phy-qcom-ufs.c -> max 925000
 		vreg_l1j_0p91: ldo1 {
 			regulator-name = "vreg_l1j_0p91";
 			regulator-min-microvolt = <880000>;
@@ -1534,7 +1538,13 @@
 
 &ufs_mem_phy {
 	vdda-phy-supply = <&vreg_l1j_0p91>;
+
+	// In drivers/phy/qualcomm/phy-qcom-ufs.c this regulator should be max 1800000uV
 	vdda-pll-supply = <&vreg_l3g_1p2>;
+
+	// Used in the android implementation
+	//vdda-qref-supply = <&vreg_l3i_0p88>;
+	//vdda-refgen-supply = <&vreg_l1f_0p88>;
 
 	status = "okay";
 };
@@ -1546,6 +1556,10 @@
 	vcc-max-microamp = <1300000>;
 	vccq-supply = <&vreg_l1d_1p2>;
 	vccq-max-microamp = <1200000>;
+
+	// Used in the android implementation
+	//vdd-hba-supply = <&vreg_l2i_1p2>;
+	//vdd-hba-max-microamp = <100>;
 
 	status = "okay";
 };
