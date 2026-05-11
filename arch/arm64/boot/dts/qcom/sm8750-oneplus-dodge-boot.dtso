@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Oneplus 13 "Bootloader" overlay
+ *
+ * Copyright (c) 2026, Peter Viechter
+ */
+
+/dts-v1/;
+/plugin/;
+
+&wcd939x {
+	status = "disabled";
+};
+
+&soundcard {
+	status = "disabled";
+};
+
+&wcn7850_pmu {
+	status = "disabled";
+};
+
+&pcie0 {
+	status = "disabled";
+};
+
+&pcie0_phy {
+	status = "disabled";
+};
+
+&remoteproc_cdsp {
+	status = "disabled";
+};
+
+&remoteproc_mpss {
+	status = "disabled";
+};
+
+&iris {
+	status = "disabled";
+};
+
+&ipa {
+	status = "disabled";
+};
+
+&swr1 {
+	status = "disabled";
+};
+
+&swr2 {
+	status = "disabled";
+};
+
+&uart14 {
+	status = "disabled";
+};

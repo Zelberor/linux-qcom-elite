@@ -171,7 +171,7 @@
 		};
 	};
 
-	sound {
+	soundcard: sound {
 		compatible = "qcom,sm8750-sndcard", "qcom,sm8450-sndcard";
 		model = "SM8750-OP13";
 		audio-routing = "IN1_HPHL", "HPHL_OUT",
@@ -300,7 +300,7 @@
 		regulator-boot-on;
 	};
 
-	wcn7850-pmu {
+	wcn7850_pmu: wcn7850-pmu {
 		compatible = "qcom,wcn7850-pmu";
 
 		pinctrl-names = "default";
