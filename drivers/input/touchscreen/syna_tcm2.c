@@ -1003,8 +1003,6 @@ static int syna_dev_disconnect(struct syna_tcm *tcm)
 	if (tcm->is_connected == false)
 		return 0;
 
-	cancel_delayed_work_sync(&tcm->reflash_work);
-
 	if (hw_if->bdata_attn.irq_id)
 		syna_dev_release_irq(tcm);
 
@@ -2308,7 +2306,7 @@ static void syna_dev_remove(struct platform_device *pdev)
 	msleep(25);
 	tcm->driver_current_state = IS_REMOVE;
 	mutex_lock(&tcm->mutex);
-    tcm->dev_disconnect(tcm);
+	tcm->dev_disconnect(tcm);
 	mutex_unlock(&tcm->mutex);
 	syna_tcm_buf_release(&tcm->event_data);
 	syna_tcm_remove_device(tcm->tcm_dev);

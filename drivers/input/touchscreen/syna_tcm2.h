@@ -795,8 +795,6 @@ struct syna_tcm {
 	char algo_version[MAX_DEVICE_VERSION_LENGTH];
 	int firmware_update_type;
 	struct completion fw_complete;
-	struct delayed_work reflash_work;
-	struct workqueue_struct *reflash_workqueue;
 	pid_t proc_pid;
 	struct task_struct *proc_task;
 	int probe_done;
