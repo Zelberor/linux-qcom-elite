@@ -61,3 +61,8 @@
 &uart14 {
 	status = "disabled";
 };
+
+&gic_its {
+	// its cannot reallocate on non-EFI systems
+	status = "disabled";
+};
