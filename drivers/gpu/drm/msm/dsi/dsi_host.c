@@ -417,6 +417,19 @@ int dsi_link_clk_set_rate_6g_v2_9(struct msm_dsi_host *msm_host)
 	struct device *dev = &msm_host->pdev->dev;
 	int ret;
 
+	// Reparenting requires both clocks to be enabled
+	ret = clk_prepare_enable(msm_host->dsi_pll_byte_clk);
+	if (ret) {
+		pr_err("%s: Failed to enable dsi pll byte clk\n", __func__);
+		goto error;
+	}
+
+	ret = clk_prepare_enable(msm_host->dsi_pll_pixel_clk);
+	if (ret) {
+		pr_err("%s: Failed to enable dsi pll pixel clk\n", __func__);
+		goto pixel_clk_err;
+	}
+
 	/*
 	 * DSI PHY PLLs have to be enabled to allow reparenting to them, so
 	 * cannot use assigned-clock-parents.
@@ -429,7 +442,16 @@ int dsi_link_clk_set_rate_6g_v2_9(struct msm_dsi_host *msm_host)
 	if (ret)
 		dev_err(dev, "Failed to parent pixel_src -> dsi_pll_pixel: %d\n", ret);
 
+	// Disable is required, otherwise the panel only shows pixel-soup
+	clk_disable_unprepare(msm_host->dsi_pll_pixel_clk);
+	clk_disable_unprepare(msm_host->dsi_pll_byte_clk);
+
 	return dsi_link_clk_set_rate_6g(msm_host);
+
+pixel_clk_err:
+	clk_disable_unprepare(msm_host->dsi_pll_byte_clk);
+error:
+	return ret;
 }
 
 int dsi_link_clk_enable_6g(struct msm_dsi_host *msm_host)
@@ -469,6 +491,30 @@ pixel_clk_err:
 	clk_disable_unprepare(msm_host->byte_clk);
 byte_clk_err:
 	clk_disable_unprepare(msm_host->esc_clk);
+error:
+	return ret;
+}
+
+int dsi_link_clk_enable_6g_v2_9(struct msm_dsi_host *msm_host)
+{
+	int ret;
+
+	ret = clk_prepare_enable(msm_host->dsi_pll_byte_clk);
+	if (ret) {
+		pr_err("%s: Failed to enable dsi pll byte clk\n", __func__);
+		goto error;
+	}
+
+	ret = clk_prepare_enable(msm_host->dsi_pll_pixel_clk);
+	if (ret) {
+		pr_err("%s: Failed to enable dsi pll pixel clk\n", __func__);
+		goto pixel_clk_err;
+	}
+
+	return dsi_link_clk_enable_6g(msm_host);
+
+pixel_clk_err:
+	clk_disable_unprepare(msm_host->dsi_pll_byte_clk);
 error:
 	return ret;
 }
@@ -556,6 +602,13 @@ void dsi_link_clk_disable_6g(struct msm_dsi_host *msm_host)
 	clk_disable_unprepare(msm_host->pixel_clk);
 	clk_disable_unprepare(msm_host->byte_intf_clk);
 	clk_disable_unprepare(msm_host->byte_clk);
+}
+
+void dsi_link_clk_disable_6g_v2_9(struct msm_dsi_host *msm_host)
+{
+	dsi_link_clk_disable_6g(msm_host);
+	clk_disable_unprepare(msm_host->dsi_pll_pixel_clk);
+	clk_disable_unprepare(msm_host->dsi_pll_byte_clk);
 }
 
 void dsi_link_clk_disable_v2(struct msm_dsi_host *msm_host)
