@@ -28,17 +28,23 @@
 	status = "disabled";
 };
 
-&remoteproc_cdsp {
-	status = "disabled";
-};
+// CDSP has to stay enabled for display to work after kexec
+// Leads to timeout otherwise
+// (Firmware is not required, just needs to be enabled in dt)
+// &remoteproc_cdsp {
+// 	status = "disabled";
+// };
 
 &remoteproc_mpss {
 	status = "disabled";
 };
 
-&iris {
-	status = "disabled";
-};
+// Iris has to stay enabled for display to work after kexec
+// Leads to timeout otherwise
+// (Firmware is not required, just needs to be enabled in dt)
+// &iris {
+// 	status = "disabled";
+// };
 
 &ipa {
 	status = "disabled";
