@@ -1985,6 +1985,8 @@ static void gpi_free_chan_resources(struct dma_chan *chan)
 	struct gchan *gchan = to_gchan(chan);
 	struct gpii *gpii = gchan->gpii;
 	enum gpi_pm_state cur_state;
+	enum gpi_pm_state cur_state_child;
+	bool has_active_child = false;
 	int ret, i;
 
 	mutex_lock(&gpii->ctrl_lock);
@@ -1997,10 +1999,30 @@ static void gpi_free_chan_resources(struct dma_chan *chan)
 	write_unlock_irq(&gpii->pm_lock);
 
 	/* attempt to do graceful hardware shutdown */
-	if (cur_state == ACTIVE_STATE) {
-		gpi_stop_chan(gchan);
+	if (cur_state == ACTIVE_STATE || cur_state == PAUSE_STATE) {
+		for (i = 0; i < MAX_CHANNELS_PER_GPII; i++) {
+			cur_state_child = gpii->gchan[i].pm_state;
 
-		ret = gpi_send_cmd(gpii, gchan, GPI_CH_CMD_RESET);
+			if (cur_state_child != ACTIVE_STATE && cur_state_child != PAUSE_STATE)
+				continue;
+			has_active_child = true;
+
+			if (cur_state_child == ACTIVE_STATE)
+				gpi_stop_chan(&gpii->gchan[i]);
+
+			ret = gpi_send_cmd(gpii, &gpii->gchan[i], GPI_CH_CMD_RESET);
+			if (ret)
+				dev_err(gpii->gpi_dev->dev, "error resetting channel:%d\n", ret);
+
+			gpi_reset_chan(&gpii->gchan[i], GPI_CH_CMD_DE_ALLOC);
+		}
+	}
+
+	if (has_active_child) {
+		if (cur_state == ACTIVE_STATE)
+			gpi_stop_chan(gchan);
+
+		gpi_send_cmd(gpii, gchan, GPI_CH_CMD_RESET);
 		if (ret)
 			dev_err(gpii->gpi_dev->dev, "error resetting channel:%d\n", ret);
 
@@ -2294,6 +2316,17 @@ static int gpi_probe(struct platform_device *pdev)
 	return ret;
 }
 
+static void gpi_shutdown(struct platform_device *pdev) {
+	struct gpi_dev		*gpi = platform_get_drvdata(pdev);
+	struct dma_chan		*chan, *_chan;
+
+	list_for_each_entry_safe(chan, _chan, &gpi->dma_device.channels,
+			device_node) {
+		gpi_free_chan_resources(chan);
+		list_del(&chan->device_node);
+	}
+}
+
 static const struct of_device_id gpi_of_match[] = {
 	{ .compatible = "qcom,sdm845-gpi-dma", .data = (void *)0x0 },
 	{ .compatible = "qcom,sm6350-gpi-dma", .data = (void *)0x10000 },
@@ -2313,6 +2346,7 @@ MODULE_DEVICE_TABLE(of, gpi_of_match);
 
 static struct platform_driver gpi_driver = {
 	.probe = gpi_probe,
+	.shutdown = gpi_shutdown,
 	.driver = {
 		.name = KBUILD_MODNAME,
 		.of_match_table = gpi_of_match,
