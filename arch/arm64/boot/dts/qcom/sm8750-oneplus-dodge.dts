@@ -35,13 +35,13 @@
 	qcom,board-id = <0x40008 0>;
 
 	reserved-memory {
-		// Disabled so the bootloader does not conflict with the kernel
-		// When enabled leads to iommu page faults and unreliable display init
-		// splash_memory: splash_region@fc800000 {
-		// 	reg = <0x0 0xfc800000 0x0 0x02b00000>;
-		// 	label = "cont_splash_region";
-		// 	no-map;
-		// };
+		// When enabled leads the bootlaoder leaves the display enabled
+		// May lead to to iommu page faults
+		splash_memory: splash_region@fc800000 {
+			reg = <0x0 0xfc800000 0x0 0x02b00000>;
+			label = "cont_splash_region";
+			no-map;
+		};
 
 		ramoops: ramoops@a3000000 {
 			compatible = "ramoops";
@@ -239,7 +239,7 @@
 			};
 		};
 	};
-	
+
 	pmic-glink {
 		compatible = "qcom,sm8750-pmic-glink",
 			     "qcom,sm8550-pmic-glink",
@@ -288,7 +288,7 @@
 			};
 		};
 	};
-	
+
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
 
@@ -1097,7 +1097,7 @@
 	// };
 };
 
-// TODO: Check thermal zones in 
+// TODO: Check thermal zones in
 // android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-pmic-overlay.dtsi
 // android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-thermal.dtsi
 // android_kernel_modules_and_devicetree_oneplus_sm8750/kernel_platform/qcom/opensource/devicetree/qcom/sun-tp.dtsi
@@ -1176,8 +1176,8 @@
 		// vdd-supply is not enabled by the driver currently. (Apparently not needed?)
 		vdd-supply = <&vreg_l11b_1p0>;
 
-		pinctrl-0 = <&disp0_reset_n_suspend>, 
-			    <&mdp_vsync>, 
+		pinctrl-0 = <&disp0_reset_n_suspend>,
+			    <&mdp_vsync>,
 			    <&sde_esync>;
 		pinctrl-names = "default";
 
@@ -1406,7 +1406,7 @@
 		bias-pull-down;
 		drive-strength = <2>;
 	};
-	
+
 	hall_interrupt_input: hall-interrupt-input-state {
 		pins = "gpio97";
 		function = "gpio";
@@ -1720,7 +1720,7 @@
 };
 
 &pm8010_n {
-	// Access fails with 
+	// Access fails with
 	// "spmi spmi-0: pmic_arb_wait_for_done: 0xd 0x104: transaction failed (0x3) reg: 0x3ee8"
 	// "pmic-spmi 0-0d: probe with driver pmic-spmi failed with error -5"
 	status = "disabled";
