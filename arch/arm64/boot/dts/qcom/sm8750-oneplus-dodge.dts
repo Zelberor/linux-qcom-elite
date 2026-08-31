@@ -35,13 +35,13 @@
 	qcom,board-id = <0x40008 0>;
 
 	reserved-memory {
-		// Disabled so the bootloader does not conflict with the kernel
-		// When enabled leads to iommu page faults and unreliable display init
-		// splash_memory: splash_region@fc800000 {
-		// 	reg = <0x0 0xfc800000 0x0 0x02b00000>;
-		// 	label = "cont_splash_region";
-		// 	no-map;
-		// };
+		// When enabled leads the bootlaoder leaves the display enabled
+		// May lead to to iommu page faults
+		splash_memory: splash_region@fc800000 {
+			reg = <0x0 0xfc800000 0x0 0x02b00000>;
+			label = "cont_splash_region";
+			no-map;
+		};
 
 		ramoops: ramoops@a3000000 {
 			compatible = "ramoops";
