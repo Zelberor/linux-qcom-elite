@@ -300,8 +300,10 @@
 		regulator-boot-on;
 	};
 
-	wcn7850-pmu {
+	wcn7860-pmu {
 		compatible = "qcom,wcn7850-pmu";
+		// wcn7850 is intentional, since vdd is only powed up by the
+		// wcn7850 power-sequencing
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&wlan_en>, <&bt_default>;
@@ -1253,7 +1255,7 @@
 	reset-gpios = <&tlmm 102 GPIO_ACTIVE_LOW>;
 
 	wifi@0 {
-		compatible = "pci17cb,1107";
+		compatible = "pci17cb,110e";
 		reg = <0x10000 0x0 0x0 0x0 0x0>;
 
 		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
@@ -1514,7 +1516,7 @@
 	status = "okay";
 
 	bluetooth {
-		compatible = "qcom,wcn7850-bt";
+		compatible = "qcom,wcn7860-bt";
 
 		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
 		vddaon-supply = <&vreg_pmu_aon_0p59>;
