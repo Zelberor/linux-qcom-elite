@@ -1322,6 +1322,14 @@
 	status = "okay";
 };
 
+&gpu {
+	status = "okay";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/sm8750/oneplus/dodge/gen80000_zap.mbn";
+};
+
 &iris {
 	firmware-name = "qcom/sm8750/oneplus/dodge/vpu35_4v.mbn";
 
