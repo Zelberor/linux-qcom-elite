@@ -26,6 +26,8 @@ struct panel_aa569_p_3_a0019_dsc {
 	struct regulator *vddio_reg;
 	struct regulator *vci_reg;
 	struct regulator *vdd_reg;
+
+	bool enabled;
 };
 
 static inline
@@ -358,6 +360,8 @@ static int panel_aa569_p_3_a0019_dsc_prepare(struct drm_panel *panel)
 
 	msleep(28); /* TODO: Is this panel-dependent? */
 
+	ctx->enabled = true;
+
 	return 0;
 }
 
@@ -366,6 +370,8 @@ static int panel_aa569_p_3_a0019_dsc_unprepare(struct drm_panel *panel)
 	struct panel_aa569_p_3_a0019_dsc *ctx = to_panel_aa569_p_3_a0019_dsc(panel);
 	struct device *dev = &ctx->dsi->dev;
 	int ret;
+
+	ctx->enabled = false;
 
 	ret = panel_aa569_p_3_a0019_dsc_off(ctx);
 	if (ret < 0)
@@ -412,8 +418,19 @@ static const struct drm_panel_funcs panel_aa569_p_3_a0019_dsc_panel_funcs = {
 static int panel_aa569_p_3_a0019_dsc_bl_update_status(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
+	struct panel_aa569_p_3_a0019_dsc *ctx = mipi_dsi_get_drvdata(dsi);
 	u16 brightness = backlight_get_brightness(bl);
 	int ret;
+
+	/*
+	 * Only drive the DSI link while the panel is enabled and streaming.
+	 * A brightness write that races panel bring-up or the first frame
+	 * kickoff after a modeset wedges the DSI command engine. The level
+	 * is cached by the backlight core and re-applied from init_sequence()
+	 * on every prepare(), so skipping the write while disabled is safe.
+	 */
+	if (!ctx->enabled)
+		return 0;
 
 	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
@@ -430,8 +447,15 @@ static int panel_aa569_p_3_a0019_dsc_bl_update_status(struct backlight_device *b
 static int panel_aa569_p_3_a0019_dsc_bl_get_brightness(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
+	struct panel_aa569_p_3_a0019_dsc *ctx = mipi_dsi_get_drvdata(dsi);
 	u16 brightness;
 	int ret;
+
+	/*
+	 * Only drive the DSI link while the panel is enabled and streaming.
+	 */
+	if (!ctx->enabled)
+		return 0;
 
 	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
