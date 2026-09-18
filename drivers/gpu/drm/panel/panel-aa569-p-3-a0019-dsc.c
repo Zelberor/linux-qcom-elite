@@ -22,12 +22,15 @@ struct panel_aa569_p_3_a0019_dsc {
 	struct mipi_dsi_device *dsi;
 	struct drm_dsc_config dsc;
 	struct gpio_desc *reset_gpio;
-	struct gpio_desc *vddr_en_gpio;
-	struct regulator *vddio_reg;
-	struct regulator *vci_reg;
-	struct regulator *vdd_reg;
+	struct regulator_bulk_data *supplies;
 
-	bool enabled;
+	struct gpio_desc *vddr_en_gpio;
+};
+
+static const struct regulator_bulk_data panel_aa569_p_3_a0019_dsc_supplies[] = {
+	{ .supply = "vddio" },
+	{ .supply = "vci" },
+	{ .supply = "vdd" },
 };
 
 static inline
@@ -36,77 +39,14 @@ struct panel_aa569_p_3_a0019_dsc *to_panel_aa569_p_3_a0019_dsc(struct drm_panel 
 	return container_of(panel, struct panel_aa569_p_3_a0019_dsc, panel);
 }
 
-static int panel_aa569_p_3_a0019_power_on(struct panel_aa569_p_3_a0019_dsc *ctx)
+static void panel_aa569_p_3_a0019_dsc_reset(struct panel_aa569_p_3_a0019_dsc *ctx)
 {
-	int ret;
-
-	// Based on oplus,panel-power-on-sequence
-	msleep(1);
-	ret = regulator_enable(ctx->vddio_reg);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(3);
-	ret = gpiod_set_value_cansleep(ctx->vddr_en_gpio, 1);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(3);
-	ret = regulator_enable(ctx->vci_reg);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(10);
-
-	return 0;
-}
-
-static int panel_aa569_p_3_a0019_power_off(struct panel_aa569_p_3_a0019_dsc *ctx)
-{
-	int ret;
-
-	// Based on oplus,panel-power-off-sequence
-	msleep(1);
-	ret = regulator_disable(ctx->vci_reg);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(3);
-	ret = gpiod_set_value_cansleep(ctx->vddr_en_gpio, 0);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(3);
-	ret = regulator_disable(ctx->vddio_reg);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(1);
-
-	return 0;
-}
-
-static int panel_aa569_p_3_a0019_dsc_reset(struct panel_aa569_p_3_a0019_dsc *ctx)
-{
-	int ret;
-
-	ret = gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(10);
-	ret = gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(5);
-	ret = gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	if (ret < 0) {
-		return ret;
-	}
-	msleep(30);
-
-	return 0;
+	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	usleep_range(10000, 21000);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	usleep_range(10000, 21000);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	usleep_range(10000, 21000);
 }
 
 static int panel_aa569_p_3_a0019_dsc_on(struct panel_aa569_p_3_a0019_dsc *ctx)
@@ -298,6 +238,7 @@ static int panel_aa569_p_3_a0019_dsc_on(struct panel_aa569_p_3_a0019_dsc *ctx)
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb8, 0xff, 0x06, 0x03);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0x5a, 0xa5, 0x00);
 	mipi_dsi_dcs_set_display_on_multi(&dsi_ctx);
+	mipi_dsi_msleep(&dsi_ctx, 20);
 
 	return dsi_ctx.accum_err;
 }
@@ -324,17 +265,16 @@ static int panel_aa569_p_3_a0019_dsc_prepare(struct drm_panel *panel)
 	struct drm_dsc_picture_parameter_set pps;
 	int ret;
 
-	ret = panel_aa569_p_3_a0019_power_on(ctx);
+	gpiod_set_value_cansleep(ctx->vddr_en_gpio, 1);
+
+	ret = regulator_bulk_enable(ARRAY_SIZE(panel_aa569_p_3_a0019_dsc_supplies),
+				    ctx->supplies);
 	if (ret < 0) {
 		dev_err(dev, "failed to power on panel: %d\n", ret);
 		return ret;
 	}
 
-	ret = panel_aa569_p_3_a0019_dsc_reset(ctx);
-	if (ret < 0) {
-		dev_err(&ctx->dsi->dev, "failed to reset panel: %d\n", ret);
-		return ret;
-	}
+	panel_aa569_p_3_a0019_dsc_reset(ctx);
 
 	ret = panel_aa569_p_3_a0019_dsc_on(ctx);
 	if (ret < 0) {
@@ -358,9 +298,7 @@ static int panel_aa569_p_3_a0019_dsc_prepare(struct drm_panel *panel)
 	}
 	
 
-	msleep(28); /* TODO: Is this panel-dependent? */
-
-	ctx->enabled = true;
+	msleep(28);
 
 	return 0;
 }
@@ -371,19 +309,16 @@ static int panel_aa569_p_3_a0019_dsc_unprepare(struct drm_panel *panel)
 	struct device *dev = &ctx->dsi->dev;
 	int ret;
 
-	ctx->enabled = false;
-
 	ret = panel_aa569_p_3_a0019_dsc_off(ctx);
 	if (ret < 0)
 		dev_err(dev, "failed to un-initialize panel: %d\n", ret);
 
-	ret = panel_aa569_p_3_a0019_power_off(ctx);
-	if (ret < 0) {
-		dev_err(dev, "failed to power off panel: %d\n", ret);
-		return ret;
-	}
-
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+
+	regulator_bulk_disable(ARRAY_SIZE(panel_aa569_p_3_a0019_dsc_supplies),
+			       ctx->supplies);
+
+	gpiod_set_value_cansleep(ctx->vddr_en_gpio, 0);
 
 	return 0;
 }
@@ -429,7 +364,7 @@ static int panel_aa569_p_3_a0019_dsc_bl_update_status(struct backlight_device *b
 	 * is cached by the backlight core and re-applied from init_sequence()
 	 * on every prepare(), so skipping the write while disabled is safe.
 	 */
-	if (!ctx->enabled)
+	if (!ctx->panel.enabled)
 		return 0;
 
 	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
@@ -454,7 +389,7 @@ static int panel_aa569_p_3_a0019_dsc_bl_get_brightness(struct backlight_device *
 	/*
 	 * Only drive the DSI link while the panel is enabled and streaming.
 	 */
-	if (!ctx->enabled)
+	if (!ctx->panel.enabled)
 		return 0;
 
 	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
@@ -499,7 +434,12 @@ static int panel_aa569_p_3_a0019_dsc_probe(struct mipi_dsi_device *dsi)
 	if (IS_ERR(ctx))
 		return PTR_ERR(ctx);
 
-	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+	ret = devm_regulator_bulk_get_const(dev,
+					    ARRAY_SIZE(panel_aa569_p_3_a0019_dsc_supplies),
+					    panel_aa569_p_3_a0019_dsc_supplies,
+					    &ctx->supplies);
+
+	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
@@ -508,27 +448,12 @@ static int panel_aa569_p_3_a0019_dsc_probe(struct mipi_dsi_device *dsi)
 		return dev_err_probe(dev, PTR_ERR(ctx->vddr_en_gpio),
 				     "Failed to get vddr_en-gpios\n");
 
-	ctx->vddio_reg = devm_regulator_get(dev, "vddio");
-	if (IS_ERR(ctx->vddio_reg))
-		return dev_err_probe(dev, PTR_ERR(ctx->vddio_reg),
-				     "Failed to get vddio-supply regulator\n");
-	ctx->vci_reg = devm_regulator_get(dev, "vci");
-	if (IS_ERR(ctx->vci_reg))
-		return dev_err_probe(dev, PTR_ERR(ctx->vci_reg),
-				     "Failed to get vci-supply regulator\n");
-	ctx->vdd_reg = devm_regulator_get(dev, "vdd");
-	if (IS_ERR(ctx->vdd_reg))
-		return dev_err_probe(dev, PTR_ERR(ctx->vdd_reg),
-				     "Failed to get vdd-supply regulator\n");
-
 	ctx->dsi = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB101010;
-	dsi->mode_flags = MIPI_DSI_MODE_VIDEO_BURST |
-			  MIPI_DSI_MODE_NO_EOT_PACKET |
-			  MIPI_DSI_CLOCK_NON_CONTINUOUS;
+	dsi->mode_flags = MIPI_DSI_MODE_NO_EOT_PACKET | MIPI_DSI_CLOCK_NON_CONTINUOUS;
 
 	ctx->panel.prepare_prev_first = true;
 
@@ -542,10 +467,8 @@ static int panel_aa569_p_3_a0019_dsc_probe(struct mipi_dsi_device *dsi)
 
 	/* This panel only supports DSC; unconditionally enable it */
 	dsi->dsc = &ctx->dsc;
-
 	ctx->dsc.dsc_version_major = 1;
 	ctx->dsc.dsc_version_minor = 2;
-
 	ctx->dsc.slice_height = 22;
 	ctx->dsc.slice_width = 720;
 	ctx->dsc.slice_count = 2;
@@ -587,7 +510,7 @@ static struct mipi_dsi_driver panel_aa569_p_3_a0019_dsc_driver = {
 	.probe = panel_aa569_p_3_a0019_dsc_probe,
 	.remove = panel_aa569_p_3_a0019_dsc_remove,
 	.driver = {
-		.name = "panel-panel-aa569-p-3-a0019-dsc",
+		.name = "panel-aa569-p-3-a0019-dsc",
 		.of_match_table = panel_aa569_p_3_a0019_dsc_of_match,
 	},
 };

@@ -1175,10 +1175,9 @@
 		// vdd-supply is not enabled by the driver currently. (Apparently not needed?)
 		vdd-supply = <&vreg_l11b_1p0>;
 
-		pinctrl-0 = <&disp0_reset_n_suspend>,
-			    <&mdp_vsync>,
-			    <&sde_esync>;
-		pinctrl-names = "default";
+		pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync>, <&sde_esync>;
+		pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync>, <&sde_esync>;
+		pinctrl-names = "default", "sleep";
 
 		port {
 			panel0_in: endpoint {
@@ -1443,12 +1442,12 @@
 		bias-pull-down;
 	};
 
-	// disp0_reset_n_active: disp0-reset-n-active-state {
-	// 	pins = "gpio98";
-	// 	function = "gpio";
-	// 	drive-strength = <8>;
-	// 	bias-disable;
-	// };
+	disp0_reset_n_active: disp0-reset-n-active-state {
+		pins = "gpio98";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
 
 	disp0_reset_n_suspend: disp0-reset-n-suspend-state {
 		pins = "gpio98";
