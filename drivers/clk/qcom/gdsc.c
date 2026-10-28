@@ -350,6 +350,10 @@ static int gdsc_disable(struct generic_pm_domain *domain)
 
 	/* Turn off HW trigger mode if supported */
 	if (sc->flags & HW_CTRL) {
+		if (sc->flags & HW_CTRL_SKIP_DIS) {
+			return 0;
+		}
+
 		ret = gdsc_hwctrl(sc, false);
 		if (ret < 0)
 			return ret;
