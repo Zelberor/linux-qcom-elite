@@ -1236,6 +1236,11 @@
 	pinctrl-0 = <&pcie0_default_state>;
 	pinctrl-names = "default";
 
+	// Without this the wifi powerup will just timeout
+	// https://lore.kernel.org/all/lusy4sd2q22tvtvzgbb3pbpxauy5ym46ojjtpjq43wyzn72yxy@uxcggqladbnl/
+	// Might be related to Gunyah ...?
+	/delete-property/ msi-map;
+
 	status = "okay";
 };
 
