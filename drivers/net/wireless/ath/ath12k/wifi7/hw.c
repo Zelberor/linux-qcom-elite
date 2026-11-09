@@ -725,7 +725,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
 			.download_aux_ucode = true,
 		},
 
-		.max_radios = 2,
+		.max_radios = 1,
 		.single_pdev_only = true,
 		.qmi_service_ins_id = ATH12K_QMI_WLFW_SERVICE_INS_ID_V01_WCN7850,
 		.internal_sleep_clock = true,
@@ -771,9 +771,9 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
 		.qmi_cnss_feature_bitmap = BIT(CNSS_PCIE_PERST_NO_PULL_V01) |
 					   BIT(CNSS_AUX_UC_SUPPORT_V01),
 
-		.rfkill_pin = 0,
+		.rfkill_pin = 48,
 		.rfkill_cfg = 0,
-		.rfkill_on_level = 0,
+		.rfkill_on_level = 1,
 
 		.rddm_size = 0x780000,
 
@@ -788,7 +788,7 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
 
 		.supports_dynamic_smps_6ghz = false,
 
-		.iova_mask = 0,
+		.iova_mask = ATH12K_PCIE_MAX_PAYLOAD_SIZE - 1,
 
 		.supports_aspm = true,
 

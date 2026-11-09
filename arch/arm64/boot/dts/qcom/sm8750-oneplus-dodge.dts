@@ -304,7 +304,9 @@
 		compatible = "qcom,wcn7860-pmu";
 
 		pinctrl-names = "default";
-		pinctrl-0 = <&wlan_en>, <&bt_default>;
+		pinctrl-0 = <&wlan_en>, <&bt_default>,
+			    <&sw_ctrl_default>, <&sw_ctrl_wl_cx_default>,
+			    <&wlan_host_sol_default>;
 
 		wlan-enable-gpios = <&tlmm 16 GPIO_ACTIVE_HIGH>;
 		bt-enable-gpios = <&pm8550ve_f_gpios 3 GPIO_ACTIVE_HIGH>;
@@ -315,6 +317,8 @@
 		vdddig-supply = <&vreg_s5f_0p85>;
 		vddrfa1p2-supply = <&vreg_s7i_1p2>;
 		vddrfa1p8-supply = <&vreg_s3g_1p8>;
+
+		vddant-supply = <&vreg_l8b_1p8>;
 
 		clocks = <&rpmhcc RPMH_RF_CLK1>;
 
@@ -466,8 +470,10 @@
 		// rpmh-regulator-ldob8
 		vreg_l8b_1p8: ldo8 {
 			regulator-name = "vreg_l8b_1p8";
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <3008000>;
+			// Original: 1800000 / 3008000
+			// Overriden in vendor/qcom/opensource/wlan/wlan-devicetree/oplus/pagani_sun-peach-cnss-v8-overlay.dtsi: 2800000 / 2800000
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2800000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
@@ -617,9 +623,9 @@
 		vreg_s4d_0p85: smps4 {
 			regulator-name = "vreg_s4d_0p85";
 			// Min is 500000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
-			// 852000 is init-voltage
-			// Leaving at 852000 for parity with mtp
-			regulator-min-microvolt = <852000>;
+			// Mtp sets 852000
+			// vendor/qcom/opensource/wlan/wlan-devicetree/sun-peach-cnss.dtsi overrides to 876000
+			regulator-min-microvolt = <876000>;
 			regulator-max-microvolt = <1036000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
@@ -672,10 +678,9 @@
 		vreg_s5f_0p85: smps5 {
 			regulator-name = "vreg_s5f_0p85";
 			// Min is 500000 in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
-			// 852000 is init-voltage
-			// Leaving at 852000 for parity with mtp
-			// This regulator is disabled in sun-regulators.dtsi???
-			regulator-min-microvolt = <852000>;
+			// Mtp sets 852000
+			// vendor/qcom/opensource/wlan/wlan-devicetree/sun-peach-cnss.dtsi overrides to 876000
+			regulator-min-microvolt = <876000>;
 			regulator-max-microvolt = <1000000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
@@ -737,7 +742,9 @@
 		// rpmh-regulator-smpg3
 		vreg_s3g_1p8: smps3 {
 			regulator-name = "vreg_s3g_1p8";
-			regulator-min-microvolt = <1856000>;
+			// Original: 1856000
+			// vendor/qcom/opensource/wlan/wlan-devicetree/sun-peach-cnss.dtsi overrides to 1860000
+			regulator-min-microvolt = <1860000>;
 			regulator-max-microvolt = <2000000>;
 			// No regulator mode specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
@@ -802,7 +809,9 @@
 		// rpmh-regulator-smpi7
 		vreg_s7i_1p2: smps7 {
 			regulator-name = "vreg_s7i_1p2";
-			regulator-min-microvolt = <1224000>;
+			// Original: 1224000
+			// vendor/qcom/opensource/wlan/wlan-devicetree/sun-peach-cnss.dtsi overrides to 1312000
+			regulator-min-microvolt = <1312000>;
 			regulator-max-microvolt = <1340000>;
 			// RPMH_REGULATOR_MODE_RET specified in kernel_platform/qcom/opensource/devicetree/qcom/sun-regulators.dtsi
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
@@ -1473,6 +1482,25 @@
 		pins = "gpio16";
 		function = "gpio";
 		drive-strength = <8>;
+		bias-pull-down;
+	};
+
+	wlan_host_sol_default: wlan-host-sol-default-state {
+		pins = "gpio202";
+		function = "gpio";
+		drive-strength = <4>;
+		bias-pull-down;
+	};
+
+	sw_ctrl_default: sw-ctrl-default-state {
+		pins = "gpio18";
+		function = "gpio";
+		bias-pull-down;
+	};
+
+	sw_ctrl_wl_cx_default: sw-ctrl-wl-cx-default-state {
+		pins = "gpio19";
+		function = "gpio";
 		bias-pull-down;
 	};
 };

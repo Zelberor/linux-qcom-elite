@@ -408,6 +408,7 @@ static const char *const pwrseq_wcn7860_vregs[] = {
 	"vdddig",
 	"vddrfa1p2",
 	"vddrfa1p8",
+	"vddant"
 };
 
 static const struct pwrseq_qcom_wcn_pdata pwrseq_wcn7860_of_data = {
