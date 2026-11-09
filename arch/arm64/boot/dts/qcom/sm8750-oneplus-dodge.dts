@@ -1769,3 +1769,7 @@
 	// "pmic-spmi 0-04: probe with driver pmic-spmi failed with error -5"
 	status = "disabled";
 };
+
+// Only the gunyah-wdt based watchdog (spawned by qcom_scm) seems to work on this device
+// The other one crashes with synchronous external abort on any read/write to the watch registers
+/delete-node/ &watchdog;

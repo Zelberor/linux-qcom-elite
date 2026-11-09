@@ -6253,7 +6253,7 @@
 			};
 		};
 
-		watchdog@16410000 {
+		watchdog: watchdog@16410000 {
 			compatible = "qcom,apss-wdt-sm8750", "qcom,kpss-wdt";
 			reg = <0x0 0x16410000 0x0 0x1000>;
 			clocks = <&sleep_clk>;
